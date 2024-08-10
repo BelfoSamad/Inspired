@@ -24,7 +24,12 @@ buildkonfig {
 
     // default config is required
     defaultConfigs {
-        buildConfigField(FieldSpec.Type.STRING, "APIKey", project.properties["APIKey"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "BASE_URL", project.properties["BASE_URL"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "AUTH_URL", project.properties["AUTH_URL"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "REDIRECT_URL", project.properties["REDIRECT_URL"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "SCOPES", project.properties["SCOPES"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "CLIENT_ID", project.properties["CLIENT_ID"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "CLIENT_SECRET", project.properties["CLIENT_SECRET"].toString())
     }
 }
 

@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Inspired</string>
+    <string name="slogan">Your inspiration elevated with Inspired!</string>
+
+    <!-- Sections -->
+    <string name="inspirations">Inspirations</string>
+    <string name="folders">Folders</string>
+
+    <!-- Actions -->
+    <string name="add_asset">Add Asset</string>
+
+    <!-- Sort -->
+    <string name="sort_all">All</string>
+    <string name="sort_palette">Palette</string>
+    <string name="sort_composition">Composition</string>
+    <string name="sort_typography">Typography</string>
+    <string name="sort_pattern">Pattern</string>
+    <string name="sort_other">Other</string>
+    <string name="sort_by">Sort By</string>
+    <string name="sort_by_val">Sort By: %1$s</string>
+
+    <!-- Error Messages: TODO: Update Error Messages -->
+    <string name="error_network">No Network</string>
+    <string name="error_rate_limit">Rate Limit Exceeded</string>
+    <string name="error_data_other">Data Error</string>
+    <string name="error_auth_conflict">Authorization code or Refresh token seem to be invalid or already used!</string>
+    <string name="error_auth_request">Invalid Authorization code or Refresh token</string>
+    <string name="error_auth_request_other">Error in authentication request!</string>
+    <string name="error_auth_server">Error in server while authenticating!</string>
+    <string name="error_auth_other">Error while authenticating!</string>
+</resources>

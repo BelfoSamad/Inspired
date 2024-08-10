@@ -1,5 +1,6 @@
 package com.samadtch.inspired.data.datasources.di
 
+import com.samadtch.bilinguai.BuildKonfig
 import com.samadtch.inspired.data.datasources.local.preferences.appDSFileName
 import com.samadtch.inspired.data.datasources.local.preferences.getDataStore
 import com.samadtch.inspired.data.datasources.local.preferences.userDSFileName

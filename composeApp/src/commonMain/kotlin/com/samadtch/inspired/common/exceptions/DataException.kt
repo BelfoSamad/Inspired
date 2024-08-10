@@ -35,10 +35,13 @@ suspend fun <T> handleDataError(scope: String, block: suspend () -> T): T {
     try {
         return block()
     } catch (e: IOException) {
+        println("IO: ${e.message}")
         throw DataException(API_ERROR_NETWORK)
     } catch (e: SerializationException) {
+        println("Serialization: ${e.message}")
         throw DataException(API_ERROR_SERIALIZATION)
     } catch (e: ClientRequestException) {
+        println("Client: ${e.message}")
         when (e.response.status) {
             HttpStatusCode.Unauthorized -> throw DataException(API_ERROR_AUTH)
             HttpStatusCode.NotFound -> throw DataException(API_ERROR_NOT_FOUND)
@@ -49,9 +52,11 @@ suspend fun <T> handleDataError(scope: String, block: suspend () -> T): T {
             }
         }
     } catch (e: ServerResponseException) {
+        println("Server: ${e.message}")
         sendCrashlytics(Exception("$scope: ${e.message}"))
         throw DataException(API_ERROR_SERVER_OTHER, e.message)
     } catch (e: Exception) {
+        println("Other: ${e.message}")
         sendCrashlytics(Exception("$scope: ${e.message}"))
         throw DataException(API_ERROR_OTHER, e.message)
     }

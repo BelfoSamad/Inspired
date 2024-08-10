@@ -66,7 +66,10 @@ fun App(
                             )
                         }
                     },
-                    onDrawerOpenClick = { scope.launch { drawerState.open() } },
+                    onLogout = {
+                        //TODO: Handle State when Logging Out
+                    },
+                    onDrawerMenuClick = { scope.launch { drawerState.open() } },
                 )
             }
         }

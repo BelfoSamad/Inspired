@@ -35,7 +35,7 @@ class MainActivity : FragmentActivity() {
     lateinit var remoteConfig: FirebaseRemoteConfig
 
     //Loading
-    private val _loaded = MutableStateFlow(true)
+    private val _loaded = MutableStateFlow(false) //TODO: Make true again
     private val loaded = _loaded.asStateFlow()
 
     //Package Info
