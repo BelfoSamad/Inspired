@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625244509486",
+    "project_id": "inspired-8b493",
+    "storage_bucket": "inspired-8b493.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625244509486:android:ed23659d8a62f59ddc96bf",
+        "android_client_info": {
+          "package_name": "com.samadtch.inspired"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcy0OQj2lY0QLrl7ASN-NRMe1kXvsGXLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

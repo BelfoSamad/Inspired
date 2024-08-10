@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DefaultMap>
+    <!-- Base Links -->
+    <entry>
+        <key>PRIVACY_POLICY_LINK</key>
+        <value>https://inspired.samadtch.com/privacy_policy</value>
+    </entry>
+    <entry>
+        <key>TOS_LINK</key>
+        <value>https://inspired.samadtch.com/tos</value>
+    </entry>
+    <entry>
+        <key>DEVELOPER_ID</key>
+        <value>SamadTch</value>
+    </entry>
+</DefaultMap>
