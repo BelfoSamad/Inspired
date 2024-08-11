@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.ui.components.CustomSnackbar
 import com.samadtch.inspired.ui.theme.InspiredTheme
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.PreComposeApp
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -26,8 +27,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Preview
 fun App(
     onSplashScreenDone: () -> Unit,
+    authorize: () -> Unit,
+    authorizationCode: Pair<String, StateFlow<String?>>,
     onFilePick: () -> Unit,
-    assetFile: AssetFile?
+    assetFile: StateFlow<AssetFile?>
 ) {
     PreComposeApp {
         //------------------------------- Declarations
@@ -69,6 +72,8 @@ fun App(
                             )
                         }
                     },
+                    authorize = authorize,
+                    authorizationCode = authorizationCode,
                     onLogout = {
                         //TODO: Handle State when Logging Out
                     },

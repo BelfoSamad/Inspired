@@ -59,6 +59,7 @@ import com.samadtch.inspired.ui.components.SortDropdown
 import com.samadtch.inspired.ui.components.shimmerEffect
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
+import kotlinx.coroutines.flow.StateFlow
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 
@@ -72,7 +73,7 @@ internal fun HomeRoute(
     onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
     onFilePick: () -> Unit,
-    assetFile: AssetFile?
+    assetFile: StateFlow<AssetFile?>
 ) {
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
@@ -81,6 +82,7 @@ internal fun HomeRoute(
     val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
     val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
 
+    val file by assetFile.collectAsStateWithLifecycle() //TODO: Fix
     //------------------------------- Side Effects
     //TODO: Handle Action Error States
     //TODO: Handle Returns! [Created Folder, Updated Folder Name, Created Asset]
@@ -124,8 +126,8 @@ internal fun HomeRoute(
 
     //Asset Editor Dialog
     var showAddAssetDialog by remember { mutableStateOf(false) }
-    if (showAddAssetDialog || assetFile != null) AssetEditorDialog(
-        assetFile = assetFile,
+    if (showAddAssetDialog || file != null) AssetEditorDialog(
+        assetFile = file,
         folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
         onFilePickClick = onFilePick,
         onAssetAdd = viewModel::createAsset,

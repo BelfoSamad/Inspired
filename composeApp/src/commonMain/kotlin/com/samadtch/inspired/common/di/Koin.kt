@@ -1,6 +1,7 @@
 package com.samadtch.inspired.common.di
 
 import com.samadtch.inspired.data.datasources.di.componentsModule
+import com.samadtch.inspired.data.datasources.di.localSourcesModule
 import com.samadtch.inspired.data.datasources.di.remoteSourcesModule
 import com.samadtch.inspired.data.di.repositoriesModule
 import com.samadtch.inspired.data.di.viewmodelModule
@@ -12,6 +13,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
     modules(
         getNativeAppModule(),
         componentsModule,
+        localSourcesModule,
         remoteSourcesModule,
         repositoriesModule,
         viewmodelModule

@@ -11,29 +11,28 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.IntentCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.samadtch.bilinguai.BuildKonfig
 import com.samadtch.inspired.domain.models.AssetFile
-import com.samadtch.inspired.ui.theme.InspiredTheme
+import com.samadtch.inspired.domain.utilities.PKCEUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okio.ByteString.Companion.encodeUtf8
 import javax.inject.Inject
 
 //TODO: Handle Re-Loading after Paused status
@@ -52,6 +51,10 @@ class MainActivity : FragmentActivity() {
     //Loading
     private val _loaded = MutableStateFlow(false) //TODO: Make true again
     private val loaded = _loaded.asStateFlow()
+
+    //Authorization Code
+    private val _receivedCode = MutableStateFlow<String?>(null)
+    private val receivedCode = _receivedCode.asStateFlow()
 
     //Data
     private val _assetFile = MutableStateFlow<AssetFile?>(null)
@@ -80,6 +83,10 @@ class MainActivity : FragmentActivity() {
         if (intent.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true) {
             val uri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
             uri?.let { sendImage(uri) }
+        } else if (intent.action == Intent.ACTION_VIEW) {
+            lifecycleScope.launch {
+                if (intent.data != null) _receivedCode.emit(intent.data!!.getQueryParameter("code"))
+            }
         }
 
         //Splash Screen
@@ -101,20 +108,37 @@ class MainActivity : FragmentActivity() {
         //UI
         setContent {
             //------------------------------- Declarations
-            val asset by assetFile.collectAsState()
+            val context = LocalContext.current
 
             //------------------------------- UI
-            Column(Modifier.fillMaxWidth()) {
-                App(
-                    onSplashScreenDone = { lifecycleScope.launch { _loaded.emit(false) } },
-                    onFilePick = {
-                        imagePicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    assetFile = asset
-                )
-            }
+            App(
+                onSplashScreenDone = { lifecycleScope.launch { _loaded.emit(false) } },
+                authorize = {
+                    //Request Authorization Code
+                    val authParams = mapOf(
+                        "code_challenge_method" to "S256",
+                        "response_type" to "code",
+                        "client_id" to BuildKonfig.CLIENT_ID,
+                        "redirect_uri" to BuildKonfig.REDIRECT_URL,
+                        "scope" to BuildKonfig.SCOPES.replace(" ", "%20"),
+                        "code_challenge" to PKCEUtil.getCodeChallenge()
+                    ).entries.joinToString(separator = "&", prefix = "?") { (k, v) ->
+                        "${(k.encodeUtf8().utf8())}=${v.encodeUtf8().utf8()}"
+                    }
+
+                    //Make Call
+                    CustomTabsIntent.Builder().build().launchUrl(
+                        context, Uri.parse("${BuildKonfig.AUTH_URL}?$authParams")
+                    )
+                },
+                authorizationCode = PKCEUtil.getCodeVerifier() to receivedCode,
+                onFilePick = {
+                    imagePicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                assetFile = assetFile
+            )
         }
     }
 
@@ -141,20 +165,6 @@ class MainActivity : FragmentActivity() {
                     bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
                         .asImageBitmap()
                 )
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    InspiredTheme {
-        Surface {
-            App(
-                onSplashScreenDone = {},
-                onFilePick = {},
-                assetFile = null
             )
         }
     }

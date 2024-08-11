@@ -1,8 +1,12 @@
 package com.samadtch.inspired.common.di
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+import android.net.Uri
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.samadtch.bilinguai.BuildKonfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

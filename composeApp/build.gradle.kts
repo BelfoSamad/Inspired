@@ -139,7 +139,11 @@ android {
     }
     dependencies {
         implementation(libs.androidx.material)
+        implementation(libs.androidx.lifecycle.runtime.ktx)
         implementation(libs.androidx.palette)
+        implementation(libs.androidx.security)
+        implementation(libs.androidx.browser)
+        implementation(libs.androidx.splashscreen)
         debugImplementation(compose.uiTooling)
 
         //Firebase
@@ -152,9 +156,6 @@ android {
         implementation(libs.hilt.compose.navigation)
         kapt(libs.hilt.android.compiler)
         kapt(libs.hilt.compiler)
-
-        //Splash Screen
-        implementation(libs.androidx.splashscreen)
     }
 }
 

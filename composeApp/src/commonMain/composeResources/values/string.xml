@@ -2,6 +2,22 @@
     <string name="app_name">Inspired</string>
     <string name="slogan">Your inspiration elevated with Inspired!</string>
 
+    <!-- Boarding Messages -->
+    <string-array name="boarding_titles">
+        <item>Instant Inspiration</item>
+        <item>Organize Your Creativity</item>
+        <item>Expand Your Color Palette</item>
+        <item>Fuel Your Design Fire</item>
+        <item>Connect to Your Canva Account</item>
+    </string-array>
+    <string-array name="boarding_descriptions">
+        <item>Capture &amp; save ideas as Canva assets.</item>
+        <item>Create folders to manage inspirations &amp; designs.</item>
+        <item>Extract colors from images for your designs.</item>
+        <item>Capture, organize, and use inspiration.</item>
+        <item>Link your Canva account to start saving and managing your inspirations.</item>
+    </string-array>
+
     <!-- Sections & Titles -->
     <string name="inspirations">Inspirations</string>
     <string name="folders">Folders</string>
@@ -13,6 +29,9 @@
     <string name="delete">Delete</string>
     <string name="add">Add</string>
     <string name="update">Update</string>
+    <!-- TODO: Follow guidelines for a better action title -->
+    <string name="authenticate">Authenticate</string>
+    <string name="next">Next</string>
 
     <!-- Sort -->
     <string name="sort_all">All</string>
