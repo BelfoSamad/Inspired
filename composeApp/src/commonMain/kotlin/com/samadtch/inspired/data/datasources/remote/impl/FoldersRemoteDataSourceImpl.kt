@@ -2,12 +2,20 @@ package com.samadtch.inspired.data.datasources.remote.impl
 
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.FoldersRemoteDataSource
+import com.samadtch.inspired.data.datasources.remote.dto.FolderInput
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemsDTO
+import com.samadtch.inspired.domain.models.Folder
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 
 class FoldersRemoteDataSourceImpl(
     private val client: HttpClient
@@ -32,4 +40,37 @@ class FoldersRemoteDataSourceImpl(
 
             folderItems
         }
+
+    override suspend fun deleteFolder(token: String, folderId: String) {
+        handleDataError("deleteFolder") {
+            client.delete("folders/$folderId") { bearerAuth(token) }
+        }
+    }
+
+    override suspend fun createFolder(token: String, folder: Folder, parentId: String) {
+        handleDataError("createFolder") {
+            client.post("folders") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                setBody(
+                    FolderInput(
+                        name = folder.name,
+                        parentFolderId = parentId
+                    )
+                )
+            }
+        }
+    }
+
+    override suspend fun updateFolder(token: String, folder: Folder) {
+        handleDataError("updateFolder") {
+            client.patch("folders/${folder.folderId}") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                setBody(
+                    FolderInput(name = folder.name)
+                )
+            }
+        }
+    }
 }

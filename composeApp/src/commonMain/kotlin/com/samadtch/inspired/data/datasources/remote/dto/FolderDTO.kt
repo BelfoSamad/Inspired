@@ -6,6 +6,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class FolderInput(
+    val name: String,
+    @SerialName("parent_folder_id")
+    val parentFolderId: String? = null
+)
+
+@Serializable
 data class FolderDTO(
     val id: String,
     val name: String,

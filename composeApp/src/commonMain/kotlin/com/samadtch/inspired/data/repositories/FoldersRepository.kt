@@ -9,4 +9,8 @@ interface FoldersRepository {
 
     fun getAllItems(): Flow<Result<Pair<List<Folder>, List<Asset>>>>
 
+    suspend fun deleteFolder(folderId: String)
+
+    suspend fun saveFolder(folder: Folder, parentId: String?)
+
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -47,7 +48,11 @@ import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_RATE_LIMIT
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.Folder
+import com.samadtch.inspired.ui.components.AssetEditorDialog
+import com.samadtch.inspired.ui.components.FolderDialog
+import com.samadtch.inspired.ui.components.FolderEditorDialog
 import com.samadtch.inspired.ui.components.SortDropdown
+import com.samadtch.inspired.ui.components.shimmerEffect
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
@@ -65,6 +70,53 @@ internal fun HomeRoute(
 ) {
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
+    val deleteFolderState by viewModel.deleteFolderState.collectAsStateWithLifecycle()
+    val saveFolderState by viewModel.saveFolderState.collectAsStateWithLifecycle()
+    val saveAssetState by viewModel.saveAssetState.collectAsStateWithLifecycle()
+
+    //------------------------------- Side Effects
+    //TODO: Handle Action Error States
+    //TODO: Handle Returns! [Created Folder, Updated Name]
+
+    //------------------------------- Dialogs
+    //Folder Editor
+    var folderAddDialog by remember { mutableStateOf<String?>(null) }
+    var folderUpdateDialog by remember { mutableStateOf<Folder?>(null) }
+    if (folderAddDialog != null || folderUpdateDialog != null) FolderEditorDialog(
+        folder = folderUpdateDialog,
+        parentId = folderAddDialog,
+        onFolderUpdate = viewModel::saveFolder,
+        folderSaveState = saveFolderState,
+        onDismiss = {
+            folderAddDialog = null
+            folderUpdateDialog = null
+        }
+    )
+
+    //Folder Dialog
+    var folderDialog by remember { mutableStateOf<Folder?>(null) }
+    if (folderDialog != null) FolderDialog(
+        folder = folderDialog!!,
+        onFolderUpdate = {
+            folderDialog = null
+            folderUpdateDialog = it
+        },
+        onFolderDelete = viewModel::deleteFolder,
+        folderDeleteState = deleteFolderState,
+        onDismiss = { folderDialog = null }
+    )
+
+    //Asset Dialog
+    var showAddAssetDialog by remember { mutableStateOf(false) }
+    if (showAddAssetDialog) AssetEditorDialog(
+        folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
+        onFilePickClick = {
+            //TODO: Handle File Picking
+        },
+        onAssetAdd = {},//TODO: Handle Adding Asset
+        assetSaveState = saveAssetState,
+        onDismiss = { showAddAssetDialog = false }
+    )
 
     //------------------------------- UI
     HomeScreen(
@@ -74,9 +126,9 @@ internal fun HomeRoute(
         onLogout = onLogout,
         onDrawerMenuClick = onDrawerMenuClick,
         onAssetClick = { },//TODO: Handle Asset Click
-        onAssetAddClick = { },//TODO: Handle Asset Adding Click
-        onFolderClick = { },//TODO: Handle Folder Click
-        onFolderAddClick = { },//TODO: Handle Folder Adding Click
+        onAssetAddClick = { showAddAssetDialog = true },
+        onFolderClick = { folderDialog = it },
+        onFolderAddClick = { folderAddDialog = it }
     )
 }
 
@@ -142,8 +194,7 @@ fun HomeScreen(
 
     //------------------------------- UI
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
+        modifier = modifier.verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 24.dp)
     ) {
         //Top Section
@@ -172,12 +223,14 @@ fun HomeScreen(
 
         //Inspirations
         Inspirations(
+            modifier = Modifier.fillMaxWidth(),
             loading = isLoading,
             errorCaught = errorCaught,
             assets = assets,
             onAssetClick = onAssetClick,
             onAssetAddClick = onAssetAddClick
         )
+        Spacer(Modifier.height(16.dp))
 
         //Folders
         Folders(
@@ -192,6 +245,7 @@ fun HomeScreen(
 
 @Composable
 fun Inspirations(
+    modifier: Modifier,
     loading: Boolean = true,
     errorCaught: Boolean = false,
     assets: List<Asset>,
@@ -201,16 +255,14 @@ fun Inspirations(
     //------------------------------- Declarations
     var sortBy by remember { mutableStateOf("All") }
     val sortedAssets by remember {
-        mutableStateOf(
-            when (sortBy) {
-                "All" -> assets
-                "Palette" -> assets.filter { it.tags.contains("palette") }
-                "Composition" -> assets.filter { it.tags.contains("composition") }
-                "Typography" -> assets.filter { it.tags.contains("typography") }
-                "Pattern" -> assets.filter { it.tags.contains("pattern") }
-                else -> assets.filter { it.tags.contains("other") }
-            }
-        )
+        mutableStateOf(when (sortBy) {
+            "All" -> assets
+            "Palette" -> assets.filter { it.tags.contains("palette") }
+            "Composition" -> assets.filter { it.tags.contains("composition") }
+            "Typography" -> assets.filter { it.tags.contains("typography") }
+            "Pattern" -> assets.filter { it.tags.contains("pattern") }
+            else -> assets.filter { it.tags.contains("other") }
+        })
     }
 
     //------------------------------- Side Effects
@@ -219,7 +271,7 @@ fun Inspirations(
     }
 
     //------------------------------- UI
-    Column(Modifier.fillMaxWidth()) {
+    Column(modifier) {
         //Top Section
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -232,25 +284,27 @@ fun Inspirations(
             )
             SortDropdown { sortBy = it } //TODO: Handle empty data when filtered
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
 
         //Inspirations (Assets)
         if (loading) {
-            //TODO: Handle Loading
+            InspirationLoader()
         } else if (errorCaught) {
             //TODO: Handle Error
-        } else if (assets.isEmpty()) {
+        } else if (sortedAssets.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxWidth()
-                    .height(256.dp)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        shape = MaterialTheme.shapes.large
-                    ).clickable { onAssetAddClick() },
-                contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxWidth().height(144.dp).border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = MaterialTheme.shapes.large
+                ).clickable { onAssetAddClick() }, contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Add, null)
+                Icon(
+                    modifier = Modifier.size(48.dp),
+                    imageVector = Icons.Default.Add,
+                    tint = MaterialTheme.colorScheme.secondaryContainer,
+                    contentDescription = null
+                )
             }
         } else {
             LazyRow {
@@ -261,12 +315,11 @@ fun Inspirations(
                 item {
                     Column(Modifier.width(96.dp)) {
                         Box(
-                            modifier = Modifier.width(96.dp).height(144.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                                    shape = MaterialTheme.shapes.large
-                                ).clickable { onAssetAddClick() },
+                            modifier = Modifier.width(96.dp).height(144.dp).border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = MaterialTheme.shapes.large
+                            ).clickable { onAssetAddClick() },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.Add, null)
@@ -274,7 +327,7 @@ fun Inspirations(
                         Text(
                             modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
                             text = stringResource(Res.string.add_asset),
-                            textAlign = TextAlign.Center,//TODO: Add textAlign for Asset name
+                            textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -285,33 +338,44 @@ fun Inspirations(
 }
 
 @Composable
+fun InspirationLoader() {
+    Row(Modifier.fillMaxWidth()) {
+        repeat(3) {
+            Box(
+                Modifier.weight(1f).height(144.dp).background(
+                    shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface
+                ).shimmerEffect()
+            )
+            Spacer(Modifier.width(8.dp))
+        }
+    }
+}
+
+@Composable
 fun InspirationItem(
-    asset: Asset,
-    onAssetClick: (Asset) -> Unit
+    asset: Asset, onAssetClick: (Asset) -> Unit
 ) {
     Column(Modifier.width(96.dp)) {
         Box(
             modifier = Modifier.fillMaxWidth().height(144.dp).background(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = MaterialTheme.shapes.large
-            ).clickable { onAssetClick(asset) },
-            contentAlignment = Alignment.Center
+            ).clickable { onAssetClick(asset) }, contentAlignment = Alignment.Center
         ) {
             Icon(
-                modifier = Modifier.align(Alignment.Center),
-                imageVector = when {
+                modifier = Modifier.align(Alignment.Center), imageVector = when {
                     asset.tags.contains("palette") -> Icons.Default.Colorize
                     asset.tags.contains("composition") -> Icons.Default.Casino
                     asset.tags.contains("typography") -> Icons.Default.TextFields
                     asset.tags.contains("pattern") -> Icons.Default.Pattern
                     else -> Icons.Default.PlusOne
-                },
-                contentDescription = null
+                }, contentDescription = null
             )
         }
         Text(
             modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
             text = asset.name,
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelLarge
         )
     }
@@ -343,7 +407,7 @@ fun Folders(
         }
 
         if (loading) {
-            //TODO: Handle Loading
+            FolderLoader()
         } else if (errorCaught || folders.isEmpty()) {
             //TODO: Handle Error
         } else {
@@ -356,6 +420,13 @@ fun Folders(
 }
 
 @Composable
+fun FolderLoader() {
+    repeat(5) {
+        Box(Modifier.fillMaxWidth().height(48.dp).padding(bottom = 8.dp).shimmerEffect())
+    }
+}
+
+@Composable
 fun FolderItem(
     folder: Folder,
     onFolderClick: (Folder) -> Unit,
@@ -363,21 +434,17 @@ fun FolderItem(
 ) {
     Column {
         Row(
-            modifier = Modifier
-                .clickable { onFolderClick(folder) }
-                .fillMaxWidth(),
+            modifier = Modifier.clickable { onFolderClick(folder) }.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 modifier = Modifier.padding(end = 8.dp),
-                tint = MaterialTheme.colorScheme.tertiaryContainer,
+                tint = MaterialTheme.colorScheme.secondaryContainer,
                 imageVector = Icons.Default.Folder,
                 contentDescription = null
             )
             Text(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .weight(1f),
+                modifier = Modifier.padding(4.dp).weight(1f),
                 text = folder.name,
                 style = MaterialTheme.typography.titleMedium
             )

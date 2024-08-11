@@ -1,0 +1,415 @@
+package com.samadtch.inspired.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.samadtch.inspired.common.LOADING_STATE
+import com.samadtch.inspired.common.SUCCESS_STATE
+import com.samadtch.inspired.domain.models.Asset
+import com.samadtch.inspired.domain.models.Folder
+import inspired.composeapp.generated.resources.Res
+import inspired.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
+
+/* **************************************************************************
+ * ************************************* Folders
+ */
+@Composable
+fun FolderDialog(
+    folder: Folder,
+    onFolderUpdate: (Folder) -> Unit,
+    onFolderDelete: (String) -> Unit,
+    folderDeleteState: Int?,
+    onDismiss: () -> Unit
+) {
+    //------------------------------- Side Effect
+    LaunchedEffect(folderDeleteState) {
+        if (folderDeleteState == SUCCESS_STATE) onDismiss()
+    }
+
+    //------------------------------- UI
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = folder.name,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                //TODO: maybe add createdAt?
+            }
+        },
+        confirmButton = {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                FilledTonalButton(onClick = { onFolderDelete(folder.folderId!!) }) {
+                    //Loading State
+                    if (folderDeleteState == LOADING_STATE) CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(28.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(Res.string.delete), //TODO: Add Confirmation (double click)
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                FilledTonalButton(onClick = { onFolderUpdate(folder) }) {
+                    Text(
+                        text = stringResource(Res.string.update),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        },
+    )
+}
+
+@Composable
+fun FolderEditorDialog(
+    folder: Folder? = null,
+    parentId: String? = null,
+    onFolderUpdate: (Folder, String?) -> Unit,
+    folderSaveState: Int?,
+    onDismiss: () -> Unit
+) {
+    //------------------------------- Declarations
+    var name by remember { mutableStateOf(folder?.name ?: "") }
+    var error by remember { mutableStateOf<StringResource?>(null) } //TODO: Maybe not needed
+
+    //------------------------------- Side Effect
+    LaunchedEffect(folderSaveState) {
+        if (folderSaveState == SUCCESS_STATE) onDismiss()
+    }
+
+    //------------------------------- UI
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (folder == null) stringResource(Res.string.add_folder)
+                    else stringResource(Res.string.update_folder),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                IconButton(onClick = { onDismiss() }) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                }
+            }
+        },
+        text = {
+            OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                shape = MaterialTheme.shapes.extraLarge,
+                textStyle = MaterialTheme.typography.labelSmall,
+                placeholder = {
+                    Text(
+                        text = stringResource(Res.string.folder_name_placeholder),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                isError = error != null,
+                supportingText = {
+                    if (error != null) Text(
+                        text = stringResource(error!!),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                value = name,
+                onValueChange = { name = it }
+            )
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FilledTonalButton(
+                    onClick = {
+                        error = null
+                        //Save
+                        if (name == "") error = Res.string.error_name_required
+                        else if (folder != null && name == folder.name) error =
+                            Res.string.error_name_similar
+                        else {
+                            if (folder == null) onFolderUpdate(Folder(name = name), parentId!!)
+                            else onFolderUpdate(folder.copy(name = name), null)
+                        }
+                    },
+                ) {
+                    //Loading State
+                    if (folderSaveState == LOADING_STATE) CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(0.dp, 0.dp, 16.dp, 0.dp)
+                            .size(28.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                    Text(
+                        text = if (folder == null) stringResource(Res.string.add)
+                        else stringResource(Res.string.update),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        }
+    )
+}
+
+/* **************************************************************************
+ * ************************************* Assets
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AssetEditorDialog(
+    folders: List<Folder>,
+    onFilePickClick: () -> Unit,
+    onAssetAdd: (Asset) -> Unit,
+    assetSaveState: Int?,
+    onDismiss: () -> Unit
+) {
+    //------------------------------- Declarations
+    //Name
+    var name by remember { mutableStateOf("") }
+    var errorName by remember { mutableStateOf<StringResource?>(null) }
+
+    //Tags
+    var tag by remember { mutableStateOf("") }
+    val tags = remember { mutableStateListOf<String>() }
+    var errorTag by remember { mutableStateOf<StringResource?>(null) }
+
+    //Types
+    val types = stringArrayResource(Res.array.types).filter { it != "All" }
+    var type by remember { mutableStateOf<String?>(null) }
+    var errorType by remember { mutableStateOf<StringResource?>(null) }
+
+    //Folder
+    var folderId by remember { mutableStateOf("root") }
+
+    //------------------------------- UI
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(Res.string.add_asset),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                IconButton(onClick = { onDismiss() }) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                }
+            }
+        },
+        text = {
+            Column(Modifier.fillMaxWidth()) {
+                //File Upload Button
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(144.dp)
+                        .padding(bottom = 8.dp)//TODO: Pass on to the file name!
+                        .clickable { onFilePickClick() }
+                        .background(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.large
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        imageVector = Icons.Default.UploadFile,
+                        contentDescription = null
+                    )
+                }
+                Text(//TODO: Properly handle
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    text = "Pick Image",
+                    textAlign = TextAlign.Center
+                )
+                //TODO: Add File name and error text
+
+                //Asset Name
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    textStyle = MaterialTheme.typography.labelSmall,
+                    placeholder = {
+                        Text(
+                            text = stringResource(Res.string.asset_name_placeholder),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    isError = errorName != null,
+                    supportingText = {
+                        if (errorName != null) Text(
+                            text = stringResource(errorName!!),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    value = name,
+                    onValueChange = { name = it }
+                )
+
+                //Pick Type
+                Dropdown(
+                    modifier = Modifier.fillMaxWidth(),
+                    hint = stringResource(Res.string.pick_type),
+                    options = types,
+                    onItemPicked = { type = types[it] }
+                )
+                if (errorType != null) Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = stringResource(errorType!!),
+                    style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.error)
+                )
+                Spacer(Modifier.height(16.dp))
+
+                //Pick Folder
+                FoldersDropdown(
+                    modifier = Modifier.fillMaxWidth(),
+                    hint = stringResource(Res.string.pick_folder),
+                    folders = folders,
+                    onFolderPicked = { folderId = it }
+                )
+                Spacer(Modifier.height(16.dp))
+
+                //Tags
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp)
+                            .wrapContentHeight(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        textStyle = MaterialTheme.typography.labelSmall,
+                        placeholder = {
+                            Text(
+                                text = stringResource(Res.string.folder_name_placeholder),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        isError = errorTag != null,
+                        value = tag,
+                        onValueChange = { tag = it }
+                    )
+                    OutlinedIconButton(
+                        onClick = {
+                            if (tag == "") errorTag = Res.string.error_tag_required
+                            else tags.add(tag)
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                    }
+                    if (errorTag != null) Text(
+                        text = stringResource(errorTag!!),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                FlowRow {
+                    tags.filter { it != "inspiration" && it != type }.forEach {
+                        InputChip(
+                            selected = false,
+                            onClick = { tags.remove(it) },
+                            label = { Text(it) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FilledTonalButton(
+                    onClick = {
+                        errorName = null
+
+                        //Save
+                        if (name == "") errorName = Res.string.error_name_required
+                        else onAssetAdd(
+                            Asset(
+                                name = name,
+                                tags = tags.apply {
+                                    add("inspiration")
+                                    type?.let { add(it) }
+                                }
+                            )
+                        )
+                    },
+                ) {
+                    //Loading State
+                    if (assetSaveState == LOADING_STATE) CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(0.dp, 0.dp, 16.dp, 0.dp)
+                            .size(28.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(Res.string.add),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        }
+    )
+}

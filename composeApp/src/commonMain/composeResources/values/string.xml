@@ -2,12 +2,17 @@
     <string name="app_name">Inspired</string>
     <string name="slogan">Your inspiration elevated with Inspired!</string>
 
-    <!-- Sections -->
+    <!-- Sections & Titles -->
     <string name="inspirations">Inspirations</string>
     <string name="folders">Folders</string>
+    <string name="add_folder">Add Folder</string>
+    <string name="update_folder">Update Folder</string>
 
     <!-- Actions -->
     <string name="add_asset">Add Asset</string>
+    <string name="delete">Delete</string>
+    <string name="add">Add</string>
+    <string name="update">Update</string>
 
     <!-- Sort -->
     <string name="sort_all">All</string>
@@ -18,6 +23,20 @@
     <string name="sort_other">Other</string>
     <string name="sort_by">Sort By</string>
     <string name="sort_by_val">Sort By: %1$s</string>
+    <string-array name="types"> <!-- TODO: Use these instead of above sort strings -->
+        <item>All</item>
+        <item>Palette</item>
+        <item>Composition</item>
+        <item>Typography</item>
+        <item>Pattern</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Inputs -->
+    <string name="folder_name_placeholder">Folder Name</string>
+    <string name="asset_name_placeholder">Asset Name</string>
+    <string name="pick_folder">Pick Folder</string>
+    <string name="pick_type">Pick Inspiration Type</string>
 
     <!-- Error Messages: TODO: Update Error Messages -->
     <string name="error_network">No Network</string>
@@ -28,4 +47,7 @@
     <string name="error_auth_request_other">Error in authentication request!</string>
     <string name="error_auth_server">Error in server while authenticating!</string>
     <string name="error_auth_other">Error while authenticating!</string>
+    <string name="error_name_required">Name shouldn\'t be empty</string>
+    <string name="error_name_similar">Name seem to be unchanged</string>
+    <string name="error_tag_required">Tag is required</string>
 </resources>
