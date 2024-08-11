@@ -37,6 +37,7 @@
     <string name="asset_name_placeholder">Asset Name</string>
     <string name="pick_folder">Pick Folder</string>
     <string name="pick_type">Pick Inspiration Type</string>
+    <string name="pick_image">Pick Image</string>
 
     <!-- Error Messages: TODO: Update Error Messages -->
     <string name="error_network">No Network</string>
@@ -50,4 +51,5 @@
     <string name="error_name_required">Name shouldn\'t be empty</string>
     <string name="error_name_similar">Name seem to be unchanged</string>
     <string name="error_tag_required">Tag is required</string>
+    <string name="error_file_required">Image is required</string>
 </resources>

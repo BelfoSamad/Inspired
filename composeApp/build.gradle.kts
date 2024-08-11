@@ -139,6 +139,7 @@ android {
     }
     dependencies {
         implementation(libs.androidx.material)
+        implementation(libs.androidx.palette)
         debugImplementation(compose.uiTooling)
 
         //Firebase

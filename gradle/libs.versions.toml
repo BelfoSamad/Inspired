@@ -24,6 +24,7 @@ buildConfig = "0.15.1"
 precompose = "1.6.0-rc02"
 hilt = "2.51"
 hilt-tools = "1.2.0"
+palette = "1.0.0"
 
 [libraries]
 buildKonfig = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildConfig" }
@@ -41,6 +42,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+androidx-palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
 
 # Pre-Compose
 precompose-core = { module = "moe.tlaster:precompose", version.ref = "precompose" }

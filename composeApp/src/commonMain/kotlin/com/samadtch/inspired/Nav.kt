@@ -2,6 +2,7 @@ package com.samadtch.inspired
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.feature.home.HOME_ROUTE
 import com.samadtch.inspired.feature.home.HomeRoute
 import com.samadtch.inspired.feature.home.HomeViewModel
@@ -17,6 +18,8 @@ fun Nav(
     onShowSnackbar: suspend (Boolean, String, String?) -> Unit,
     onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
+    onFilePick: () -> Unit,
+    assetFile: AssetFile?
 ) {
     //------------------------------- Declarations
     val navigator = rememberNavigator()
@@ -40,6 +43,8 @@ fun Nav(
                 onShowSnackbar = onShowSnackbar,
                 onLogout = onLogout,
                 onDrawerMenuClick = onDrawerMenuClick,
+                onFilePick = onFilePick,
+                assetFile = assetFile
             )
         }
     }

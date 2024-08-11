@@ -26,10 +26,10 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pattern
 import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +40,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.jetbrains.compose.resources.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,7 +49,9 @@ import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKE
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NETWORK
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_RATE_LIMIT
 import com.samadtch.inspired.domain.models.Asset
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
+import com.samadtch.inspired.ui.components.AssetDialog
 import com.samadtch.inspired.ui.components.AssetEditorDialog
 import com.samadtch.inspired.ui.components.FolderDialog
 import com.samadtch.inspired.ui.components.FolderEditorDialog
@@ -67,16 +71,19 @@ internal fun HomeRoute(
     onShowSnackbar: suspend (Boolean, String, String?) -> Unit,
     onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
+    onFilePick: () -> Unit,
+    assetFile: AssetFile?
 ) {
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
     val deleteFolderState by viewModel.deleteFolderState.collectAsStateWithLifecycle()
     val saveFolderState by viewModel.saveFolderState.collectAsStateWithLifecycle()
-    val saveAssetState by viewModel.saveAssetState.collectAsStateWithLifecycle()
+    val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
+    val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
 
     //------------------------------- Side Effects
     //TODO: Handle Action Error States
-    //TODO: Handle Returns! [Created Folder, Updated Name]
+    //TODO: Handle Returns! [Created Folder, Updated Folder Name, Created Asset]
 
     //------------------------------- Dialogs
     //Folder Editor
@@ -107,14 +114,22 @@ internal fun HomeRoute(
     )
 
     //Asset Dialog
+    var assetDialog by remember { mutableStateOf<Asset?>(null) }
+    if (assetDialog != null) AssetDialog(
+        asset = assetDialog!!,
+        onAssetDelete = viewModel::deleteAsset,
+        assetDeleteState = deleteAssetState,
+        onDismiss = { assetDialog = null }
+    )
+
+    //Asset Editor Dialog
     var showAddAssetDialog by remember { mutableStateOf(false) }
-    if (showAddAssetDialog) AssetEditorDialog(
+    if (showAddAssetDialog || assetFile != null) AssetEditorDialog(
+        assetFile = assetFile,
         folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
-        onFilePickClick = {
-            //TODO: Handle File Picking
-        },
-        onAssetAdd = {},//TODO: Handle Adding Asset
-        assetSaveState = saveAssetState,
+        onFilePickClick = onFilePick,
+        onAssetAdd = viewModel::createAsset,
+        assetCreatedState = createAssetState,
         onDismiss = { showAddAssetDialog = false }
     )
 
@@ -125,7 +140,7 @@ internal fun HomeRoute(
         homeUiState = homeUiState,
         onLogout = onLogout,
         onDrawerMenuClick = onDrawerMenuClick,
-        onAssetClick = { },//TODO: Handle Asset Click
+        onAssetClick = { assetDialog = it },
         onAssetAddClick = { showAddAssetDialog = true },
         onFolderClick = { folderDialog = it },
         onFolderAddClick = { folderAddDialog = it }
@@ -203,12 +218,13 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //TODO: Use Logo Instead
             Text(
                 text = stringResource(Res.string.app_name),
-                style = MaterialTheme.typography.displaySmall
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontFamily = FontFamily(Font(Res.font.display_bold))
+                )
             )
-            FilledTonalIconButton(onClick = { onDrawerMenuClick() }) {
+            OutlinedIconButton(onClick = { onDrawerMenuClick() }) {
                 Icon(Icons.Default.Menu, null)
             }
         }
@@ -254,20 +270,37 @@ fun Inspirations(
 ) {
     //------------------------------- Declarations
     var sortBy by remember { mutableStateOf("All") }
-    val sortedAssets by remember {
-        mutableStateOf(when (sortBy) {
-            "All" -> assets
-            "Palette" -> assets.filter { it.tags.contains("palette") }
-            "Composition" -> assets.filter { it.tags.contains("composition") }
-            "Typography" -> assets.filter { it.tags.contains("typography") }
-            "Pattern" -> assets.filter { it.tags.contains("pattern") }
-            else -> assets.filter { it.tags.contains("other") }
-        })
-    }
+    val sortedAssets = remember { mutableListOf<Asset>() }
 
     //------------------------------- Side Effects
+    //TODO: Properly handle Assets Sorting
+    //Init Sorted Assets
+    LaunchedEffect(assets) {
+        sortedAssets.addAll(
+            when (sortBy) {
+                "All" -> assets
+                "Palette" -> assets.filter { it.tags.contains("palette") }
+                "Composition" -> assets.filter { it.tags.contains("composition") }
+                "Typography" -> assets.filter { it.tags.contains("typography") }
+                "Pattern" -> assets.filter { it.tags.contains("pattern") }
+                else -> assets.filter { it.tags.contains("other") }
+            }
+        )
+    }
+
     LaunchedEffect(sortBy) {
-        //TODO: Maybe needed
+        //Update Sorted List
+        sortedAssets.clear()
+        sortedAssets.addAll(
+            when (sortBy) {
+                "All" -> assets
+                "Palette" -> assets.filter { it.tags.contains("palette") }
+                "Composition" -> assets.filter { it.tags.contains("composition") }
+                "Typography" -> assets.filter { it.tags.contains("typography") }
+                "Pattern" -> assets.filter { it.tags.contains("pattern") }
+                else -> assets.filter { it.tags.contains("other") }
+            }
+        )
     }
 
     //------------------------------- UI

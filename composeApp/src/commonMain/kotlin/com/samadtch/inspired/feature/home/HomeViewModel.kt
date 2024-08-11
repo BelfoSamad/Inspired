@@ -5,6 +5,7 @@ import com.samadtch.inspired.common.Result
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException
 import com.samadtch.inspired.common.exceptions.DataException
+import com.samadtch.inspired.data.repositories.AssetsRepository
 import com.samadtch.inspired.data.repositories.FoldersRepository
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.Folder
@@ -19,7 +20,8 @@ import moe.tlaster.precompose.viewmodel.ViewModel
 import moe.tlaster.precompose.viewmodel.viewModelScope
 
 class HomeViewModel(
-    private val foldersRepository: FoldersRepository
+    private val foldersRepository: FoldersRepository,
+    private val assetsRepository: AssetsRepository
 ) : ViewModel() {
 
     /* **************************************************************************
@@ -50,8 +52,10 @@ class HomeViewModel(
     val deleteFolderState: StateFlow<Int?> = _deleteFolderState.asStateFlow()
     private val _saveFolderState = MutableStateFlow<Int?>(null)
     val saveFolderState: StateFlow<Int?> = _saveFolderState.asStateFlow()
-    private val _saveAssetState = MutableStateFlow<Int?>(null)
-    val saveAssetState: StateFlow<Int?> = _saveAssetState.asStateFlow()
+    private val _createAssetState = MutableStateFlow<Int?>(null)
+    val createAssetState: StateFlow<Int?> = _createAssetState.asStateFlow()
+    private val _deleteAssetState = MutableStateFlow<Int?>(null)
+    val deleteAssetState: StateFlow<Int?> = _deleteAssetState.asStateFlow()
 
     /* **************************************************************************
      * ************************************* Functions
@@ -85,6 +89,40 @@ class HomeViewModel(
                 _saveFolderState.emit(e.code)
             } catch (e: DataException) {
                 println("SAVE FOLDER - DATA ERROR: " + e.message)
+                _saveFolderState.emit(e.code)
+            }
+        }
+    }
+
+    fun createAsset(asset: Asset) {
+        viewModelScope.launch {
+            _createAssetState.emit(LOADING_STATE)//Loading State
+            try {
+                assetsRepository.createAsset(asset)
+                _createAssetState.emit(SUCCESS_STATE)
+            } //TODO: Properly handle returned errors
+            catch (e: AuthException) {
+                println("SAVE ASSET - AUTH ERROR: " + e.message)
+                _saveFolderState.emit(e.code)
+            } catch (e: DataException) {
+                println("SAVE ASSET - DATA ERROR: " + e.message)
+                _saveFolderState.emit(e.code)
+            }
+        }
+    }
+
+    fun deleteAsset(assetId: String) {
+        viewModelScope.launch {
+            _deleteAssetState.emit(LOADING_STATE)//Loading State
+            try {
+                assetsRepository.deleteAsset(assetId)
+                _deleteAssetState.emit(SUCCESS_STATE)
+            } //TODO: Properly handle returned errors
+            catch (e: AuthException) {
+                println("SAVE ASSET - AUTH ERROR: " + e.message)
+                _saveFolderState.emit(e.code)
+            } catch (e: DataException) {
+                println("SAVE ASSET - DATA ERROR: " + e.message)
                 _saveFolderState.emit(e.code)
             }
         }

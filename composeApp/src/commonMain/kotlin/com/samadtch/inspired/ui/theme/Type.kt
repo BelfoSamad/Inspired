@@ -16,12 +16,8 @@ val typography = Typography(
     displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily),
     displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily),
     //Boarding Message
-    headlineLarge = baseline.headlineLarge.copy(
-        fontFamily = displayFontFamily,
-        fontWeight = FontWeight.Bold
-    ),
+    headlineLarge = baseline.headlineLarge.copy(fontFamily = displayFontFamily),
     headlineMedium = baseline.headlineMedium.copy(fontFamily = displayFontFamily),
-
     headlineSmall = baseline.headlineSmall.copy(fontFamily = displayFontFamily),
     titleLarge = baseline.titleLarge.copy(
         fontFamily = displayFontFamily,

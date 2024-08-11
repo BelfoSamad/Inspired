@@ -13,6 +13,16 @@ data class FolderInput(
 )
 
 @Serializable
+data class FolderMove(
+    @SerialName("item_id")
+    val itemId: String,
+    @SerialName("from_folder_id")
+    val from: String,
+    @SerialName("to_folder_id")
+    val to: String
+)
+
+@Serializable
 data class FolderDTO(
     val id: String,
     val name: String,

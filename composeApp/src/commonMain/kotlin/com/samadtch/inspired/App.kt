@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.ui.components.CustomSnackbar
 import com.samadtch.inspired.ui.theme.InspiredTheme
 import kotlinx.coroutines.launch
@@ -25,6 +26,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Preview
 fun App(
     onSplashScreenDone: () -> Unit,
+    onFilePick: () -> Unit,
+    assetFile: AssetFile?
 ) {
     PreComposeApp {
         //------------------------------- Declarations
@@ -70,6 +73,8 @@ fun App(
                         //TODO: Handle State when Logging Out
                     },
                     onDrawerMenuClick = { scope.launch { drawerState.open() } },
+                    onFilePick = onFilePick,
+                    assetFile = assetFile
                 )
             }
         }

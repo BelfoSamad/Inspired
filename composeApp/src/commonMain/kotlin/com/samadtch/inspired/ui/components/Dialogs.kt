@@ -17,7 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.Pattern
+import androidx.compose.material.icons.filled.PlusOne
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +33,7 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,12 +49,16 @@ import androidx.compose.ui.unit.dp
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.domain.models.Asset
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
+
+//TODO: Disable Inputs while Loading
+//TODO: Reset Dialogs after show/hide
 
 /* **************************************************************************
  * ************************************* Folders
@@ -119,7 +129,7 @@ fun FolderEditorDialog(
 ) {
     //------------------------------- Declarations
     var name by remember { mutableStateOf(folder?.name ?: "") }
-    var error by remember { mutableStateOf<StringResource?>(null) } //TODO: Maybe not needed
+    var error by remember { mutableStateOf<StringResource?>(null) }
 
     //------------------------------- Side Effect
     LaunchedEffect(folderSaveState) {
@@ -211,11 +221,87 @@ fun FolderEditorDialog(
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
+fun AssetDialog(
+    asset: Asset,
+    onAssetDelete: (String) -> Unit,
+    assetDeleteState: Int?,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        text = {
+            Column(Modifier.fillMaxWidth()) {
+                //Top Section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(128.dp)
+                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    IconButton(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 8.dp, end = 8.dp),
+                        onClick = { onDismiss() }) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                    }
+                    Icon(
+                        modifier = Modifier.align(Alignment.Center),
+                        imageVector = when {
+                            asset.tags.contains("palette") -> Icons.Default.Colorize
+                            asset.tags.contains("composition") -> Icons.Default.Casino
+                            asset.tags.contains("typography") -> Icons.Default.TextFields
+                            asset.tags.contains("pattern") -> Icons.Default.Pattern
+                            else -> Icons.Default.PlusOne
+                        },
+                        contentDescription = null
+                    )
+                }
+
+                //Asset Content
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = asset.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                FlowRow {
+                    asset.tags.forEach {
+                        SuggestionChip(onClick = {}, label = { Text(it) })
+                        Spacer(Modifier.width(4.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                FilledTonalButton(onClick = { onAssetDelete(asset.assetId!!) }) {
+                    //Loading State
+                    if (assetDeleteState == LOADING_STATE) CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(0.dp, 0.dp, 16.dp, 0.dp)
+                            .size(28.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(Res.string.delete),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        },
+    )
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
 fun AssetEditorDialog(
+    assetFile: AssetFile? = null,
     folders: List<Folder>,
     onFilePickClick: () -> Unit,
     onAssetAdd: (Asset) -> Unit,
-    assetSaveState: Int?,
+    assetCreatedState: Int?,
     onDismiss: () -> Unit
 ) {
     //------------------------------- Declarations
@@ -233,8 +319,14 @@ fun AssetEditorDialog(
     var type by remember { mutableStateOf<String?>(null) }
     var errorType by remember { mutableStateOf<StringResource?>(null) }
 
-    //Folder
+    //Other
     var folderId by remember { mutableStateOf("root") }
+    var fileError by remember { mutableStateOf<StringResource?>(null) }
+
+    //------------------------------- Side Effects
+    LaunchedEffect(assetCreatedState) {
+        if (assetCreatedState == SUCCESS_STATE) onDismiss()
+    }
 
     //------------------------------- UI
     AlertDialog(
@@ -259,7 +351,7 @@ fun AssetEditorDialog(
                 //File Upload Button
                 Box(
                     modifier = Modifier.fillMaxWidth().height(144.dp)
-                        .padding(bottom = 8.dp)//TODO: Pass on to the file name!
+                        .padding(bottom = 4.dp)
                         .clickable { onFilePickClick() }
                         .background(
                             color = MaterialTheme.colorScheme.secondaryContainer,
@@ -273,12 +365,13 @@ fun AssetEditorDialog(
                         contentDescription = null
                     )
                 }
-                Text(//TODO: Properly handle
+                Text(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    text = "Pick Image",
-                    textAlign = TextAlign.Center
+                    text = assetFile?.fileName ?: if (fileError != null) stringResource(fileError!!)
+                    else stringResource(Res.string.pick_image),
+                    textAlign = TextAlign.Center,
+                    color = if (fileError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
                 )
-                //TODO: Add File name and error text
 
                 //Asset Name
                 OutlinedTextField(
@@ -364,7 +457,7 @@ fun AssetEditorDialog(
                     )
                 }
                 FlowRow {
-                    tags.filter { it != "inspiration" && it != type }.forEach {
+                    tags.filter { it != "inspiration" && it != type?.lowercase() }.forEach {
                         InputChip(
                             selected = false,
                             onClick = { tags.remove(it) },
@@ -382,22 +475,26 @@ fun AssetEditorDialog(
                 FilledTonalButton(
                     onClick = {
                         errorName = null
+                        fileError = null
 
                         //Save
                         if (name == "") errorName = Res.string.error_name_required
+                        else if (assetFile == null) fileError = Res.string.error_file_required
                         else onAssetAdd(
                             Asset(
                                 name = name,
                                 tags = tags.apply {
                                     add("inspiration")
-                                    type?.let { add(it) }
-                                }
+                                    type?.let { add(it.lowercase()) }
+                                }.toList(),
+                                folderId = folderId,
+                                assetFile = assetFile
                             )
                         )
                     },
                 ) {
                     //Loading State
-                    if (assetSaveState == LOADING_STATE) CircularProgressIndicator(
+                    if (assetCreatedState == LOADING_STATE) CircularProgressIndicator(
                         modifier = Modifier
                             .padding(0.dp, 0.dp, 16.dp, 0.dp)
                             .size(28.dp),
