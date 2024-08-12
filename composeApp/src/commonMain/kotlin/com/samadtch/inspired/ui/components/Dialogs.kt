@@ -17,15 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Pattern
-import androidx.compose.material.icons.filled.PlusOne
-import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,7 +52,27 @@ import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
 import inspired.composeapp.generated.resources.Res
-import inspired.composeapp.generated.resources.*
+import inspired.composeapp.generated.resources.add
+import inspired.composeapp.generated.resources.add_asset
+import inspired.composeapp.generated.resources.add_folder
+import inspired.composeapp.generated.resources.asset_name_placeholder
+import inspired.composeapp.generated.resources.delete
+import inspired.composeapp.generated.resources.error_file_required
+import inspired.composeapp.generated.resources.error_name_required
+import inspired.composeapp.generated.resources.error_name_similar
+import inspired.composeapp.generated.resources.error_tag_required
+import inspired.composeapp.generated.resources.file_too_big_error
+import inspired.composeapp.generated.resources.folder_name_placeholder
+import inspired.composeapp.generated.resources.folder_not_empty_error
+import inspired.composeapp.generated.resources.font_medium
+import inspired.composeapp.generated.resources.import_failed_error
+import inspired.composeapp.generated.resources.pick_folder
+import inspired.composeapp.generated.resources.pick_image
+import inspired.composeapp.generated.resources.pick_type
+import inspired.composeapp.generated.resources.tag_placeholder
+import inspired.composeapp.generated.resources.types
+import inspired.composeapp.generated.resources.update
+import inspired.composeapp.generated.resources.update_folder
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import org.jetbrains.compose.resources.Font
@@ -122,7 +136,8 @@ fun FolderDialog(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 FilledTonalButton(onClick = {
                     folderError = null
-                    if (!folder.children.isNullOrEmpty()) folderError = Res.string.folder_not_empty_error
+                    if (!folder.children.isNullOrEmpty()) folderError =
+                        Res.string.folder_not_empty_error
                     else onFolderDelete(folder.folderId!!)
                 }) {
                     //Loading State
@@ -134,7 +149,7 @@ fun FolderDialog(
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
                     Text(
-                        text = stringResource(Res.string.delete), //TODO: Add Confirmation (double click)
+                        text = stringResource(Res.string.delete),
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -298,7 +313,7 @@ fun AssetDialog(
                 )
                 Spacer(Modifier.height(4.dp))
                 FlowRow {
-                    asset.tags.forEach {
+                    asset.tags.filter { it != "inspiration" }.forEach {
                         SuggestionChip(
                             onClick = {},//Do Nothing
                             label = {
@@ -341,7 +356,7 @@ fun AssetEditorDialog(
     assetFile: AssetFile? = null,
     folders: List<Folder>,
     onFilePickClick: () -> Unit,
-    onAssetAdd: (Asset) -> Unit,
+    onAssetAdd: (Asset, AssetFile) -> Unit,
     assetCreatedState: Int?,
     onDismiss: () -> Unit
 ) {
@@ -553,9 +568,9 @@ fun AssetEditorDialog(
                                     add("inspiration")
                                     if (type == null) add("other") else add(type!!.lowercase())
                                 }.toList(),
-                                folderId = folderId,
-                                assetFile = assetFile
-                            )
+                                folderId = folderId
+                            ),
+                            assetFile
                         )
                     },
                 ) {

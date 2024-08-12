@@ -34,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.samadtch.inspired.domain.models.AssetFile
+import com.samadtch.inspired.feature.boarding.BoardingViewModel
 import com.samadtch.inspired.feature.home.HOME_ROUTE
 import com.samadtch.inspired.ui.components.CustomSnackbar
 import com.samadtch.inspired.ui.theme.InspiredTheme
@@ -44,25 +46,19 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-
-data class AppUiState(
-    val profileName: String = "",
-    val links: Map<String, String> = mapOf()
-)
+import org.koin.compose.koinInject
 
 @Composable
 @Preview
 fun App(
-    appState: AppUiState,
+    viewModel: BoardingViewModel = koinInject<BoardingViewModel>(),
     onSplashScreenDone: () -> Unit,
     openWebPage: (String) -> Unit,
     launchReview: () -> Unit,
     authorize: () -> Unit,
     authorizationCode: Pair<String, String>?,
     onFilePick: () -> Unit,
-    assetFile: AssetFile?,
-    logout: () -> Unit
+    assetFile: AssetFile?
 ) {
     //------------------------------- Declarations
     val scope = rememberCoroutineScope()
@@ -70,7 +66,10 @@ fun App(
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarSuccess by remember { mutableStateOf(false) }
     var current by remember { mutableStateOf<String?>(null) }
-    var loggedOut by remember { mutableStateOf<Unit?>(null) }
+
+    //data
+    val appState by viewModel.uiState.collectAsStateWithLifecycle()
+    val loggedOut by viewModel.logOutState.collectAsStateWithLifecycle()
 
     //------------------------------- UI
     InspiredTheme {
@@ -106,7 +105,7 @@ fun App(
                                         )
                                     },
                                     selected = false,
-                                    onClick = { openWebPage(appState.links["privacy"]!!) },
+                                    onClick = { openWebPage(appState!!.links["privacy"]!!) },
                                     icon = {
                                         Icon(
                                             imageVector = Icons.Default.Lock,
@@ -123,7 +122,7 @@ fun App(
                                         )
                                     },
                                     selected = false,
-                                    onClick = { openWebPage(appState.links["tos"]!!) },
+                                    onClick = { openWebPage(appState!!.links["tos"]!!) },
                                     icon = {
                                         Icon(
                                             imageVector = Icons.Default.Description,
@@ -140,7 +139,7 @@ fun App(
                                         )
                                     },
                                     selected = false,
-                                    onClick = { openWebPage("https://play.google.com/store/apps/developer?id=${appState.links["developer"]}") },
+                                    onClick = { openWebPage("https://play.google.com/store/apps/developer?id=${appState!!.links["developer"]}") },
                                     icon = {
                                         Icon(
                                             imageVector = Icons.Default.IntegrationInstructions,
@@ -183,8 +182,7 @@ fun App(
                                 },
                                 selected = false,
                                 onClick = {
-                                    logout()
-                                    loggedOut = Unit
+                                    viewModel.logout()
                                     scope.launch { drawerState.close() }
                                 },
                                 icon = {
@@ -218,7 +216,7 @@ fun App(
                     modifier = Modifier.fillMaxSize().padding(it),
                     onSplashScreenDone = onSplashScreenDone,
                     onDirectionChanges = { direction -> current = direction },
-                    onLogin = { loggedOut = null },
+                    onLogout = { viewModel.logout() },
                     loggedOut = loggedOut,
                     onShowSnackbar = { success, message, action ->
                         snackbarSuccess = success
@@ -232,7 +230,6 @@ fun App(
                     },
                     authorize = authorize,
                     authorizationCode = authorizationCode,
-                    onLogout = logout,
                     onDrawerMenuClick = { scope.launch { drawerState.open() } },
                     onFilePick = onFilePick,
                     assetFile = assetFile

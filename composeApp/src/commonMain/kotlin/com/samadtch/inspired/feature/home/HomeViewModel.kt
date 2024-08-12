@@ -9,30 +9,17 @@ import com.samadtch.inspired.common.exceptions.AuthException
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
 import com.samadtch.inspired.common.exceptions.DataException
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_AUTH
-import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NETWORK
-import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NOT_FOUND
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_OTHER
-import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_RATE_LIMIT
-import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_REQUEST_OTHER
-import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_SERVER_OTHER
 import com.samadtch.inspired.data.repositories.AssetsRepository
 import com.samadtch.inspired.data.repositories.FoldersRepository
 import com.samadtch.inspired.data.repositories.UserRepository
 import com.samadtch.inspired.domain.models.Asset
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.viewmodel.viewModel
 
 class HomeViewModel(
     private val userRepository: UserRepository,
@@ -43,31 +30,8 @@ class HomeViewModel(
     /* **************************************************************************
      * ************************************* Declarations
      */
-    private val _refresh = MutableStateFlow(Unit)
-    private val refresh: StateFlow<Unit> = _refresh.asStateFlow()
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val homeUiState: StateFlow<HomeUiState> = refresh
-        .flatMapLatest { getAllItems() }
-        .map {
-            println("REFRESHED")
-            when (it) {
-                Result.Loading -> HomeUiState.Loading
-                is Result.Error -> {
-                    HomeUiState.Error(
-                        type = if (it.exception is DataException) "DATA" else "AUTH",
-                        code = if (it.exception is DataException) it.exception.code
-                        else (it.exception as AuthException).code
-                    )
-                }
-
-                is Result.Success -> HomeUiState.Success(it.data.first, it.data.second)
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HomeUiState.Loading,
-        )
+    private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+    val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
     //Action States
     private val _deleteFolderState = MutableStateFlow<Int?>(null)
@@ -80,17 +44,34 @@ class HomeViewModel(
     val deleteAssetState: StateFlow<Int?> = _deleteAssetState.asStateFlow()
 
     /* **************************************************************************
+     * ************************************* Init
+     */
+    init { fetchAllItems() }
+
+    /* **************************************************************************
      * ************************************* Functions
      */
-    private fun getAllItems(): Flow<Result<Pair<List<Folder>, List<Asset>>>> = flow {
-        userRepository.performActionWithFreshToken { token ->
-            foldersRepository.getAllItems(token).collect { emit(it) }
-        }
-    }
+    fun fetchAllItems() {
+        viewModelScope.launch {
+            userRepository.performActionWithFreshToken { token ->
+                foldersRepository.getAllItems(token).collect {
+                    _homeUiState.emit(
+                        when (it) {
+                            Result.Loading -> HomeUiState.Loading
+                            is Result.Error -> {
+                                HomeUiState.Error(
+                                    type = if (it.exception is DataException) "DATA" else "AUTH",
+                                    code = if (it.exception is DataException) it.exception.code
+                                    else (it.exception as AuthException).code
+                                )
+                            }
 
-    fun refresh() {
-        //TODO: Fix That
-        viewModelScope.launch { _refresh.emit(Unit) }
+                            is Result.Success -> HomeUiState.Success(it.data.first, it.data.second)
+                        }
+                    )
+                }
+            }
+        }
     }
 
     fun deleteFolder(folderId: String) {
@@ -135,12 +116,12 @@ class HomeViewModel(
         }
     }
 
-    fun createAsset(asset: Asset) {
+    fun createAsset(asset: Asset, assetFile: AssetFile) {
         viewModelScope.launch {
             _createAssetState.emit(LOADING_STATE)//Loading State
             try {
                 userRepository.performActionWithFreshToken {
-                    assetsRepository.createAsset(it, asset)
+                    assetsRepository.createAsset(it, asset, assetFile)
                 }
                 _createAssetState.emit(SUCCESS_STATE)
             } catch (e: AuthException) {

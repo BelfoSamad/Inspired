@@ -9,6 +9,7 @@ import com.samadtch.inspired.data.datasources.remote.dto.AssetInput
 import com.samadtch.inspired.data.datasources.remote.dto.AssetUploadJobDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderMove
 import com.samadtch.inspired.domain.models.Asset
+import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.utilities.convertBitmapToByteArray
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -32,7 +33,7 @@ class AssetsRemoteDataSourceImpl(
 ) : AssetsRemoteDataSource {
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun createAsset(token: String, asset: Asset) {
+    override suspend fun createAsset(token: String, asset: Asset, assetFile: AssetFile) {
         handleDataError("createAsset") {
             //Upload File
             var assetUploadJob: AssetUploadJobDTO = client.post("asset-uploads") {
@@ -42,7 +43,7 @@ class AssetsRemoteDataSourceImpl(
                     "Asset-Upload-Metadata",
                     Json.encodeToString(mapOf("name_base64" to Base64.encode(asset.name.encodeToByteArray())))
                 )
-                setBody(convertBitmapToByteArray(asset.assetFile!!.bitmap))
+                setBody(convertBitmapToByteArray(assetFile.bitmap))
             }.body<AssetUploadJobDTO>()
 
             while (true) {

@@ -91,11 +91,6 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
 
-            //Pre-Compose
-            implementation(libs.precompose.core)
-            implementation(libs.precompose.viewmodel)
-            implementation(libs.precompose.koin)
-
             //Koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)

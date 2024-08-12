@@ -39,8 +39,7 @@
     <string name="delete">Delete</string>
     <string name="add">Add</string>
     <string name="update">Update</string>
-    <!-- TODO: Follow guidelines for a better action title -->
-    <string name="authenticate">Authenticate</string>
+    <string name="authenticate">Connect to Canva</string>
     <string name="next">Next</string>
 
     <!-- Filter -->
@@ -63,7 +62,7 @@
     <string name="pick_type">Pick Inspiration Type</string>
     <string name="pick_image">Pick Image</string>
 
-    <!-- Error Messages: TODO: Update Error Messages -->
+    <!-- Error Messages -->
     <string name="data_error">An unexpected error occurred.</string>
     <string name="empty_error">No results found.</string>
     <string name="error_network">Network connection is unavailable.</string>

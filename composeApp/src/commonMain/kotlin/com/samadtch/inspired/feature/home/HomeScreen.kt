@@ -39,13 +39,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
@@ -83,7 +83,6 @@ import inspired.composeapp.generated.resources.font_bold
 import inspired.composeapp.generated.resources.inspirations
 import inspired.composeapp.generated.resources.logo_font
 import inspired.composeapp.generated.resources.slogan
-import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 
@@ -99,7 +98,6 @@ internal fun HomeRoute(
     onFilePick: () -> Unit,
     assetFile: AssetFile?
 ) {
-    //viewModel.refresh()
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
     val deleteFolderState by viewModel.deleteFolderState.collectAsStateWithLifecycle()
@@ -146,7 +144,8 @@ internal fun HomeRoute(
             API_ERROR_REQUEST_OTHER -> onShowSnackbar(false, errorDataRequest, null)
             API_ERROR_SERVER_OTHER -> onShowSnackbar(false, errorDataServer, null)
             else -> onShowSnackbar(false, errorDataOther, null)
-        } else if (actionCode == SUCCESS_STATE) viewModel.refresh()
+        }
+        else if (actionCode == SUCCESS_STATE) viewModel.fetchAllItems() //refetch items after action done
     }
 
     //------------------------------- Dialogs
@@ -235,10 +234,10 @@ fun HomeScreen(
     onFolderAddClick: (String) -> Unit,
 ) {
     //------------------------------- Declarations
-    var isLoading by rememberSaveable { mutableStateOf(true) }
-    var errorCaught by rememberSaveable { mutableStateOf(false) }
-    var assets by rememberSaveable { mutableStateOf(listOf<Asset>()) }
-    var folders by rememberSaveable { mutableStateOf(listOf<Folder>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorCaught by remember { mutableStateOf(false) }
+    var assets by remember { mutableStateOf(listOf<Asset>()) }
+    var folders by remember { mutableStateOf(listOf<Folder>()) }
 
     //Errors
     val networkError = stringResource(Res.string.error_network)
@@ -345,7 +344,7 @@ fun HomeScreen(
             errorCaught = errorCaught,
             folders = folders,
             onFolderClick = onFolderClick,
-            onFolderAddClick = onFolderAddClick
+            onFolderAddClick = onFolderAddClick,
         )
     }
 }
@@ -513,7 +512,7 @@ fun Folders(
     errorCaught: Boolean = false,
     folders: List<Folder>,
     onFolderClick: (Folder) -> Unit,
-    onFolderAddClick: (String) -> Unit
+    onFolderAddClick: (String) -> Unit,
 ) {
     //------------------------------- UI
     Column(Modifier.fillMaxWidth()) {
@@ -543,7 +542,11 @@ fun Folders(
             )
         } else {
             folders.forEach {
-                FolderItem(it, onFolderClick, onFolderAddClick)
+                FolderItem(
+                    folder = it,
+                    onFolderClick = onFolderClick,
+                    onFolderAddClick = onFolderAddClick
+                )
                 Spacer(modifier = Modifier.width(4.dp))
             }
         }
@@ -583,7 +586,7 @@ fun FolderItem(
                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
             }
         }
-        folder.children!!.forEach {
+        folder.children?.forEach {
             Column(Modifier.padding(start = 24.dp)) {
                 FolderItem(it, onFolderClick, onFolderAddClick)
                 Spacer(modifier = Modifier.width(4.dp))

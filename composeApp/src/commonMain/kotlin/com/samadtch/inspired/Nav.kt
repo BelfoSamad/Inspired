@@ -2,10 +2,6 @@ package com.samadtch.inspired
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -27,12 +23,11 @@ fun Nav(
     modifier: Modifier,
     onSplashScreenDone: () -> Unit,
     onDirectionChanges: (String?) -> Unit,
+    onLogout: () -> Unit,
     loggedOut: Unit?,
     onShowSnackbar: suspend (Boolean, String, String?) -> Unit,
     authorize: () -> Unit,
     authorizationCode: Pair<String, String>?,
-    onLogin: () -> Unit,
-    onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
     onFilePick: () -> Unit,
     assetFile: AssetFile?
@@ -43,15 +38,13 @@ fun Nav(
     }
 
     LaunchedEffect(loggedOut) {
-        if (loggedOut != null) {
-            navController.navigate(
-                BOARDING_ROUTE,
-                navOptions {
-                    launchSingleTop = true
-                    popUpTo(HOME_ROUTE) { this.inclusive = true }
-                }
-            )
-        }
+        println(loggedOut)
+        if (loggedOut != null) navController.navigate(
+            BOARDING_ROUTE,
+            navOptions {
+                popUpTo(HOME_ROUTE) { this.inclusive = true }
+            }
+        )
     }
 
     //------------------------------- UI
@@ -70,11 +63,10 @@ fun Nav(
                 authorize = authorize,
                 authorizationCode = authorizationCode,
                 goHome = {
-                    onLogin()
                     navController.navigate(
                         HOME_ROUTE,
                         navOptions {
-                            launchSingleTop = true
+                            launchSingleTop = false
                             popUpTo(BOARDING_ROUTE) { this.inclusive = true }
                         }
                     )

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException
-import com.samadtch.inspired.common.exceptions.DataException
 import com.samadtch.inspired.data.repositories.ConfigRepository
 import com.samadtch.inspired.data.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class BoardingViewModel(
@@ -30,6 +28,7 @@ class BoardingViewModel(
         configRepository.isLoggedIn()
     ) { firstOpen, loggedIn ->
         BoardingUiState(
+            links = configRepository.getAppDetails(),
             isFirstOpen = firstOpen,
             isLoggedIn = loggedIn
         )
@@ -42,6 +41,8 @@ class BoardingViewModel(
     //Login State
     private val _loginState = MutableStateFlow<Int?>(null)
     val loginState: StateFlow<Int?> = _loginState.asStateFlow()
+    private val _logoutState = MutableStateFlow<Unit?>(null)
+    val logOutState: StateFlow<Unit?> = _logoutState.asStateFlow()
 
     /* **************************************************************************
      * ************************************* Functions
@@ -54,14 +55,25 @@ class BoardingViewModel(
             try {
                 userRepository.authenticate(codeVerifier, code)
                 _loginState.emit(SUCCESS_STATE)
+                _logoutState.emit(null)
             } catch (e: AuthException) {
                 _loginState.emit(e.code)
             }
         }
     }
 
+    fun logout() = viewModelScope.launch {
+        userRepository.logout()
+        _logoutState.emit(Unit)
+        _loginState.emit(null)
+    }
+
     /* **************************************************************************
      * ************************************* UI States
      */
-    data class BoardingUiState(val isFirstOpen: Boolean, val isLoggedIn: Boolean)
+    data class BoardingUiState(
+        val links: Map<String, String> = mapOf(),
+        val isFirstOpen: Boolean,
+        val isLoggedIn: Boolean
+    )
 }

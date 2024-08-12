@@ -35,7 +35,6 @@ class FoldersRepositoryImpl(
                     val folder = item.folder!!.asExternalModel()
                     folders.add(folder.copy(children = childItems?.first))
                     if (childItems != null) assets.addAll(childItems.second)
-                    println("${assets.map { it.name }} from " + folder.name)
                 }
 
                 "asset" -> {
@@ -48,21 +47,16 @@ class FoldersRepositoryImpl(
     }
 
     override fun getAllItems(token: String): Flow<Result<Pair<List<Folder>, List<Asset>>>> = flow {
-        val res = getPairedItems(token, "root")
-        println(res.second)
-        emit(res)
+        emit(getPairedItems(token, "root"))
     }.flowOn(dispatcher.io).asResult()
 
-    override suspend fun deleteFolder(token: String, folderId: String) {
-        withContext(dispatcher.io) {
-            foldersRemoteDataSource.deleteFolder(token, folderId)
-        }
+    override suspend fun deleteFolder(token: String, fId: String) = withContext(dispatcher.io) {
+        foldersRemoteDataSource.deleteFolder(token, fId)
     }
 
-    override suspend fun saveFolder(token: String, folder: Folder, parentId: String?) {
+    override suspend fun saveFolder(token: String, folder: Folder, parentId: String?) =
         withContext(dispatcher.io) {
             if (parentId != null) foldersRemoteDataSource.createFolder(token, folder, parentId)
             else foldersRemoteDataSource.updateFolder(token, folder)
         }
-    }
 }

@@ -2,6 +2,7 @@ package com.samadtch.inspired.data.datasources.remote.impl
 
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.FoldersRemoteDataSource
+import com.samadtch.inspired.data.datasources.remote.dto.FolderDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderInput
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemsDTO
@@ -48,7 +49,7 @@ class FoldersRemoteDataSourceImpl(
     }
 
     override suspend fun createFolder(token: String, folder: Folder, parentId: String) {
-        handleDataError("createFolder") {
+        return handleDataError("createFolder") {
             client.post("folders") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
@@ -63,7 +64,7 @@ class FoldersRemoteDataSourceImpl(
     }
 
     override suspend fun updateFolder(token: String, folder: Folder) {
-        handleDataError("updateFolder") {
+        return handleDataError("updateFolder") {
             client.patch("folders/${folder.folderId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
