@@ -43,7 +43,7 @@ class FoldersRepositoryImpl(
                 }
             }
         }
-        return folders to assets
+        return folders to assets.filter { it.tags.contains("inspiration") }
     }
 
     override fun getAllItems(token: String): Flow<Result<Pair<List<Folder>, List<Asset>>>> = flow {

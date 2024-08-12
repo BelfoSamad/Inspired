@@ -4,19 +4,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TokenGenInput(
-    @SerialName("grant_type")
-    val grantType: String = "authorization_code",
-    @SerialName("code_verifier")
-    val codeVerifier: String? = null,
-    val code: String? = null,
-    @SerialName("refresh_token")
-    val refreshToken: String? = null,
-    @SerialName("redirect_uri")
-    val redirectUri: String? = null
-)
-
-@Serializable
 data class TokenGenOutput(
     @SerialName("access_token")
     val accessToken: String,

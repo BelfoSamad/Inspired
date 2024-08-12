@@ -2,7 +2,6 @@ package com.samadtch.inspired.data.datasources.remote.impl
 
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.FoldersRemoteDataSource
-import com.samadtch.inspired.data.datasources.remote.dto.FolderDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderInput
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemsDTO
@@ -33,7 +32,8 @@ class FoldersRemoteDataSourceImpl(
             //Get More Items
             var continuationToken = items.continuation
             while (continuationToken != null) {
-                val newItems = client.get("folders/$folderId/items?item_types=asset,folder&continuation=${continuationToken}")
+                val newItems =
+                    client.get("folders/$folderId/items?item_types=asset,folder&continuation=${continuationToken}")
                     { bearerAuth(token) }.body<FolderItemsDTO>()
                 folderItems.addAll(newItems.items)
                 continuationToken = newItems.continuation

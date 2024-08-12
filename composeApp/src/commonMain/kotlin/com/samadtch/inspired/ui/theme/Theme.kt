@@ -250,13 +250,15 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun InspiredTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    //darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val colorScheme = darkScheme
+    //for now allow only dark theme since it is the most fitting
+    /* when {
         darkTheme -> darkScheme
         else -> lightScheme
-    }
+    }*/
 
     MaterialTheme(
         colorScheme = colorScheme,
