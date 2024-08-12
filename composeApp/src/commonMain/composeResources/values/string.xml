@@ -64,24 +64,25 @@
     <string name="pick_image">Pick Image</string>
 
     <!-- Error Messages: TODO: Update Error Messages -->
-    <string name="data_error">Unfortunately, an Error seems to have happened</string>
-    <string name="empty_error">Nothing has been found</string>
-    <string name="error_network">No Network</string>
-    <string name="error_auth">Problem with Authentication, Re-Login</string>
-    <string name="error_rate_limit">Rate Limit Exceeded</string>
-    <string name="error_not_found">Error Not Found</string>
-    <string name="error_data_request">Error With Request</string>
-    <string name="error_data_server">Error With Data Server</string>
-    <string name="error_data_other">Data Error Other</string>
-    <string name="error_auth_conflict">Authorization code or Refresh token seem to be invalid or already used!</string>
-    <string name="error_auth_request">Invalid Authorization code or Refresh token</string>
-    <string name="error_auth_request_other">Error in authentication request!</string>
-    <string name="error_auth_server">Error in server while authenticating!</string>
-    <string name="error_auth_other">Error while authenticating!</string>
-    <string name="error_name_required">Name shouldn\'t be empty</string>
-    <string name="error_name_similar">Name seem to be unchanged</string>
-    <string name="error_tag_required">Tag is required</string>
-    <string name="error_file_required">Image is required</string>
-    <string name="file_too_big_error">File seem to be too big</string>
-    <string name="import_failed_error">An Error happened while improting</string>
+    <string name="data_error">An unexpected error occurred.</string>
+    <string name="empty_error">No results found.</string>
+    <string name="error_network">Network connection is unavailable.</string>
+    <string name="error_auth">Authentication issue. Please re-login.</string>
+    <string name="error_rate_limit">Rate limit exceeded. Please try again later.</string>
+    <string name="error_not_found">Resource not found.</string>
+    <string name="error_data_request">There was an error with the data request.</string>
+    <string name="error_data_server">There was an issue with the data server.</string>
+    <string name="error_data_other">An unknown data error occurred.</string>
+    <string name="error_auth_conflict">The authorization code or refresh token may be invalid or already used.</string>
+    <string name="error_auth_request">Invalid authorization code or refresh token.</string>
+    <string name="error_auth_request_other">Authentication request error.</string>
+    <string name="error_auth_server">Server error during authentication.</string>
+    <string name="error_auth_other">Authentication error.</string>
+    <string name="error_name_required">Name cannot be empty.</string>
+    <string name="error_name_similar">The name appears to be unchanged.</string>
+    <string name="error_tag_required">A tag is required.</string>
+    <string name="error_file_required">An image is required.</string>
+    <string name="file_too_big_error">The file is too large.</string>
+    <string name="import_failed_error">An error occurred while importing.</string>
+    <string name="folder_not_empty_error">Error seem to have other folders within it!</string>
 </resources>

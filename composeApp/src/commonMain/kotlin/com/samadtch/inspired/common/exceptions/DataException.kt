@@ -29,7 +29,6 @@ class DataException(val code: Int, message: String? = null) : Exception(message)
         const val API_ERROR_OTHER = 666
 
         //Others
-        const val IMAGE_ERROR_DECODING = 1 //TODO: Handle this error too
         val handleableErrors = listOf(
             API_ERROR_AUTH, API_ERROR_NOT_FOUND,
             API_ERROR_RATE_LIMIT, API_ERROR_REQUEST_OTHER,

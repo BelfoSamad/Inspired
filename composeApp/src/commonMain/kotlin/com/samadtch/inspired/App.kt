@@ -70,6 +70,7 @@ fun App(
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarSuccess by remember { mutableStateOf(false) }
     var current by remember { mutableStateOf<String?>(null) }
+    var loggedOut by remember { mutableStateOf<Unit?>(null) }
 
     //------------------------------- UI
     InspiredTheme {
@@ -183,6 +184,7 @@ fun App(
                                 selected = false,
                                 onClick = {
                                     logout()
+                                    loggedOut = Unit
                                     scope.launch { drawerState.close() }
                                 },
                                 icon = {
@@ -215,6 +217,9 @@ fun App(
                 Nav(
                     modifier = Modifier.fillMaxSize().padding(it),
                     onSplashScreenDone = onSplashScreenDone,
+                    onDirectionChanges = { direction -> current = direction },
+                    onLogin = { loggedOut = null },
+                    loggedOut = loggedOut,
                     onShowSnackbar = { success, message, action ->
                         snackbarSuccess = success
                         scope.launch {

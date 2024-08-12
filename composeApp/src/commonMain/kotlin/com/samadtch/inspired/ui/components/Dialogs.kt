@@ -77,9 +77,11 @@ fun FolderDialog(
     folderDeleteState: Int?,
     onDismiss: () -> Unit
 ) {
+    var folderError by remember { mutableStateOf<StringResource?>(null) }
+
     //------------------------------- Side Effect
     LaunchedEffect(folderDeleteState) {
-        if (folderDeleteState == SUCCESS_STATE) onDismiss()
+        if (folderDeleteState !in listOf(SUCCESS_STATE, null)) onDismiss()
     }
 
     //------------------------------- UI
@@ -108,11 +110,21 @@ fun FolderDialog(
                         fontFamily = FontFamily(Font(Res.font.font_medium)),
                     )
                 )
+                if (folderError != null) Text(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    text = stringResource(folderError!!),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         },
         confirmButton = {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                FilledTonalButton(onClick = { onFolderDelete(folder.folderId!!) }) {
+                FilledTonalButton(onClick = {
+                    folderError = null
+                    if (!folder.children.isNullOrEmpty()) folderError = Res.string.folder_not_empty_error
+                    else onFolderDelete(folder.folderId!!)
+                }) {
                     //Loading State
                     if (folderDeleteState == LOADING_STATE) CircularProgressIndicator(
                         modifier = Modifier
@@ -253,6 +265,11 @@ fun AssetDialog(
     assetDeleteState: Int?,
     onDismiss: () -> Unit
 ) {
+    //------------------------------- Side Effect
+    LaunchedEffect(assetDeleteState) {
+        if (assetDeleteState !in listOf(SUCCESS_STATE, null)) onDismiss()
+    }
+
     AlertDialog(
         onDismissRequest = { onDismiss() },
         text = {
@@ -349,17 +366,21 @@ fun AssetEditorDialog(
     //------------------------------- Side Effects
     LaunchedEffect(assetCreatedState) {
         //Reset State
-        if (assetCreatedState == SUCCESS_STATE) {
-            //Dismiss
-            onDismiss()
+        when (assetCreatedState) {
+            SUCCESS_STATE -> {
+                //Dismiss
+                onDismiss()
 
-            //Reset
-            name = ""
-            folderId = "root"
-            type = null
-            tag = ""; tags.clear()
-        } else if (assetCreatedState == API_ERROR_FILE_TOO_BIG) fileError = Res.string.file_too_big_error
-        else if (assetCreatedState == API_ERROR_IMPORT_FAILED) fileError = Res.string.import_failed_error
+                //Reset
+                name = ""
+                folderId = "root"
+                type = null
+                tag = ""; tags.clear()
+            }
+
+            API_ERROR_FILE_TOO_BIG -> fileError = Res.string.file_too_big_error
+            API_ERROR_IMPORT_FAILED -> fileError = Res.string.import_failed_error
+        }
     }
 
     //------------------------------- UI
@@ -391,7 +412,10 @@ fun AssetEditorDialog(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(144.dp)
                         .padding(bottom = 4.dp)
-                        .clickable { onFilePickClick() }
+                        .clickable {
+                            fileError = null
+                            onFilePickClick()
+                        }
                         .background(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             shape = MaterialTheme.shapes.large

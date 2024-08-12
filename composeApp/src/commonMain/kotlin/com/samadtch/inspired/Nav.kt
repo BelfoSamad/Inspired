@@ -1,6 +1,11 @@
 package com.samadtch.inspired
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -21,14 +26,34 @@ fun Nav(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier,
     onSplashScreenDone: () -> Unit,
+    onDirectionChanges: (String?) -> Unit,
+    loggedOut: Unit?,
     onShowSnackbar: suspend (Boolean, String, String?) -> Unit,
     authorize: () -> Unit,
     authorizationCode: Pair<String, String>?,
+    onLogin: () -> Unit,
     onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
     onFilePick: () -> Unit,
     assetFile: AssetFile?
 ) {
+    //------------------------------- Declarations
+    navController.addOnDestinationChangedListener { _, destination, _ ->
+        onDirectionChanges(destination.route)
+    }
+
+    LaunchedEffect(loggedOut) {
+        if (loggedOut != null) {
+            navController.navigate(
+                BOARDING_ROUTE,
+                navOptions {
+                    launchSingleTop = true
+                    popUpTo(HOME_ROUTE) { this.inclusive = true }
+                }
+            )
+        }
+    }
+
     //------------------------------- UI
     NavHost(
         navController = navController,
@@ -45,6 +70,7 @@ fun Nav(
                 authorize = authorize,
                 authorizationCode = authorizationCode,
                 goHome = {
+                    onLogin()
                     navController.navigate(
                         HOME_ROUTE,
                         navOptions {
@@ -62,7 +88,16 @@ fun Nav(
                 modifier = modifier,
                 viewModel = koinInject<HomeViewModel>(),
                 onShowSnackbar = onShowSnackbar,
-                onLogout = onLogout,
+                onLogout = {
+                    onLogout() //Logout on MainActivity
+                    navController.navigate(
+                        BOARDING_ROUTE,
+                        navOptions {
+                            launchSingleTop = true
+                            popUpTo(HOME_ROUTE) { this.inclusive = true }
+                        }
+                    )
+                },
                 onDrawerMenuClick = onDrawerMenuClick,
                 onFilePick = onFilePick,
                 assetFile = assetFile

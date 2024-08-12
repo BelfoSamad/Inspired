@@ -20,12 +20,14 @@ import com.samadtch.inspired.data.repositories.FoldersRepository
 import com.samadtch.inspired.data.repositories.UserRepository
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.Folder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -41,9 +43,12 @@ class HomeViewModel(
     /* **************************************************************************
      * ************************************* Declarations
      */
-    private val _refresh = MutableStateFlow(false)
-    private val refresh: StateFlow<Boolean> = _refresh.asStateFlow()
-    val homeUiState: StateFlow<HomeUiState> = combine(refresh, getAllItems()) { _, items -> items }
+    private val _refresh = MutableStateFlow(Unit)
+    private val refresh: StateFlow<Unit> = _refresh.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val homeUiState: StateFlow<HomeUiState> = refresh
+        .flatMapLatest { getAllItems() }
         .map {
             println("REFRESHED")
             when (it) {
@@ -85,7 +90,7 @@ class HomeViewModel(
 
     fun refresh() {
         //TODO: Fix That
-        viewModelScope.launch { _refresh.emit(true) }
+        viewModelScope.launch { _refresh.emit(Unit) }
     }
 
     fun deleteFolder(folderId: String) {

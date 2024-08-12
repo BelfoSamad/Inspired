@@ -1,6 +1,5 @@
 package com.samadtch.inspired.feature.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Colorize
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pattern
@@ -67,10 +65,26 @@ import com.samadtch.inspired.ui.components.FilterDropdown
 import com.samadtch.inspired.ui.components.FolderDialog
 import com.samadtch.inspired.ui.components.FolderEditorDialog
 import com.samadtch.inspired.ui.components.shimmerEffect
-import inspired.composeapp.generated.resources.*
+import inspired.composeapp.generated.resources.Res
+import inspired.composeapp.generated.resources.add_asset
+import inspired.composeapp.generated.resources.app_name
+import inspired.composeapp.generated.resources.data_error
+import inspired.composeapp.generated.resources.empty_error
+import inspired.composeapp.generated.resources.error_auth
+import inspired.composeapp.generated.resources.error_auth_server
+import inspired.composeapp.generated.resources.error_data_other
+import inspired.composeapp.generated.resources.error_data_request
+import inspired.composeapp.generated.resources.error_data_server
+import inspired.composeapp.generated.resources.error_network
+import inspired.composeapp.generated.resources.error_not_found
+import inspired.composeapp.generated.resources.error_rate_limit
+import inspired.composeapp.generated.resources.folders
+import inspired.composeapp.generated.resources.font_bold
+import inspired.composeapp.generated.resources.inspirations
+import inspired.composeapp.generated.resources.logo_font
+import inspired.composeapp.generated.resources.slogan
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.Font
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 const val HOME_ROUTE = "/home"
@@ -85,14 +99,20 @@ internal fun HomeRoute(
     onFilePick: () -> Unit,
     assetFile: AssetFile?
 ) {
+    //viewModel.refresh()
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
     val deleteFolderState by viewModel.deleteFolderState.collectAsStateWithLifecycle()
     val saveFolderState by viewModel.saveFolderState.collectAsStateWithLifecycle()
     val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
     val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
-    val actionStates =
-        listOf(deleteFolderState, saveFolderState, createAssetState, deleteAssetState)
+    val actionStates = listOf(
+        deleteFolderState, saveFolderState,
+        createAssetState, deleteAssetState
+    )
+
+    //Data
+    var receivedAssetFile by remember { mutableStateOf<AssetFile?>(null) }
 
     //Errors
     val errorAuth = stringResource(Res.string.error_auth)
@@ -105,6 +125,10 @@ internal fun HomeRoute(
     val errorDataOther = stringResource(Res.string.error_data_other)
 
     //------------------------------- Side Effects
+    //catch picked Asset Files
+    LaunchedEffect(assetFile) {
+        receivedAssetFile = assetFile
+    }
 
     //all actions have the same error codes returned, handle them all here
     LaunchedEffect(actionStates) {
@@ -171,13 +195,14 @@ internal fun HomeRoute(
 
     //Asset Editor Dialog
     var showAddAssetDialog by remember { mutableStateOf(false) }
-    if (showAddAssetDialog || assetFile != null) AssetEditorDialog(
-        assetFile = assetFile,
+    if (showAddAssetDialog || receivedAssetFile != null) AssetEditorDialog(
+        assetFile = receivedAssetFile,
         folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
         onFilePickClick = onFilePick,
         onAssetAdd = viewModel::createAsset,
         assetCreatedState = createAssetState,
         onDismiss = {
+            receivedAssetFile = null
             showAddAssetDialog = false
             viewModel.resetStates()
         }
@@ -461,7 +486,7 @@ fun InspirationItem(
         ) {
             Box(Modifier.fillMaxSize()) {
                 Icon(
-                    modifier = Modifier.align(Alignment.Center).size(24.dp),
+                    modifier = Modifier.align(Alignment.Center).size(32.dp),
                     imageVector = when {
                         asset.tags.contains("palette") -> Icons.Default.Colorize
                         asset.tags.contains("composition") -> Icons.Default.Casino

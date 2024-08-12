@@ -1,15 +1,11 @@
 package com.samadtch.inspired.domain.utilities
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import java.util.Base64
 
-//TODO: Upgrade Version Code
-@RequiresApi(Build.VERSION_CODES.O)
 object PKCEUtil {
     private var verifier = ""
 
