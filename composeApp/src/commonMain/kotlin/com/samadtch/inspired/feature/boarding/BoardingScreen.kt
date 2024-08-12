@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -31,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_CONFLICT_ERROR
@@ -39,9 +37,17 @@ import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKE
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_REQUEST_ERROR_OTHER
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
 import inspired.composeapp.generated.resources.Res
-import inspired.composeapp.generated.resources.*
-import kotlinx.coroutines.flow.StateFlow
+import inspired.composeapp.generated.resources.authenticate
+import inspired.composeapp.generated.resources.boarding_descriptions
+import inspired.composeapp.generated.resources.boarding_titles
+import inspired.composeapp.generated.resources.error_auth_conflict
+import inspired.composeapp.generated.resources.error_auth_other
+import inspired.composeapp.generated.resources.error_auth_request
+import inspired.composeapp.generated.resources.error_auth_request_other
+import inspired.composeapp.generated.resources.error_auth_server
+import inspired.composeapp.generated.resources.next
 import kotlinx.coroutines.launch
+import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -54,15 +60,13 @@ internal fun BoardingRoot(
     onShowSnackbar: suspend (Boolean, String, String?) -> Unit,
     onSplashScreenDone: () -> Unit,
     authorize: () -> Unit,
-    authorizationCode: Pair<String, StateFlow<String?>>,
+    authorizationCode: Pair<String, String>?,
     goHome: () -> Unit,
 ) {
     //------------------------------- Declarations
     var goLast by rememberSaveable { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val loginState by viewModel.loginState.collectAsStateWithLifecycle()
-    val codeVerifier by remember { mutableStateOf(authorizationCode.first) }
-    val authCode by authorizationCode.second.collectAsStateWithLifecycle()
 
     //Texts
     val errorAuthConflict = stringResource(Res.string.error_auth_conflict)
@@ -72,18 +76,23 @@ internal fun BoardingRoot(
     val errorAuthOther = stringResource(Res.string.error_auth_other)
 
     //------------------------------- Effects
-    LaunchedEffect(uiState) {
-        if (uiState != null) {
-            if (uiState?.isLoggedIn == true) goHome()
-            else if (uiState?.isFirstOpen == false) goLast = true
-            onSplashScreenDone()
-        }
+    //Catch Code sent from MainActivity (Caught from Intent)
+    LaunchedEffect(authorizationCode) {
+        if (authorizationCode != null) viewModel.authenticate(
+            authorizationCode.first,
+            authorizationCode.second
+        )
     }
 
-    //Catch Code sent from MainActivity (Caught from Intent)
-    LaunchedEffect(authCode) {
-        println(authCode)
-        if (authCode != null) viewModel.authenticate(codeVerifier, authCode!!)
+    LaunchedEffect(uiState) {
+        if (uiState != null) {
+            println(uiState)
+            if (uiState?.isLoggedIn == true) {
+                println("GOING HOME")
+                goHome()
+            } else if (uiState?.isFirstOpen == false) goLast = true
+            onSplashScreenDone()
+        }
     }
 
     //Catch Token Generation State

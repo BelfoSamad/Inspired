@@ -17,7 +17,7 @@ val repositoriesModule = module {
         //FakeConfigRepository()
     }
     single<UserRepository> {
-        UserRepositoryImpl(get(), get())
+        UserRepositoryImpl(get(), get(), get())
         //FakeUserRepository()
     }
     single<FoldersRepository> {

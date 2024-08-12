@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,11 +56,10 @@ import com.samadtch.inspired.ui.components.AssetDialog
 import com.samadtch.inspired.ui.components.AssetEditorDialog
 import com.samadtch.inspired.ui.components.FolderDialog
 import com.samadtch.inspired.ui.components.FolderEditorDialog
-import com.samadtch.inspired.ui.components.SortDropdown
+import com.samadtch.inspired.ui.components.FilterDropdown
 import com.samadtch.inspired.ui.components.shimmerEffect
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
-import kotlinx.coroutines.flow.StateFlow
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 
@@ -73,7 +73,7 @@ internal fun HomeRoute(
     onLogout: () -> Unit,
     onDrawerMenuClick: () -> Unit,
     onFilePick: () -> Unit,
-    assetFile: StateFlow<AssetFile?>
+    assetFile: AssetFile?
 ) {
     //------------------------------- Declarations
     val homeUiState by viewModel.homeUiState.collectAsStateWithLifecycle()
@@ -82,7 +82,6 @@ internal fun HomeRoute(
     val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
     val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
 
-    val file by assetFile.collectAsStateWithLifecycle() //TODO: Fix
     //------------------------------- Side Effects
     //TODO: Handle Action Error States
     //TODO: Handle Returns! [Created Folder, Updated Folder Name, Created Asset]
@@ -126,8 +125,8 @@ internal fun HomeRoute(
 
     //Asset Editor Dialog
     var showAddAssetDialog by remember { mutableStateOf(false) }
-    if (showAddAssetDialog || file != null) AssetEditorDialog(
-        assetFile = file,
+    if (showAddAssetDialog || assetFile != null) AssetEditorDialog(
+        assetFile = assetFile,
         folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
         onFilePickClick = onFilePick,
         onAssetAdd = viewModel::createAsset,
@@ -271,15 +270,15 @@ fun Inspirations(
     onAssetAddClick: () -> Unit,
 ) {
     //------------------------------- Declarations
-    var sortBy by remember { mutableStateOf("All") }
-    val sortedAssets = remember { mutableListOf<Asset>() }
+    var filterBy by remember { mutableStateOf("All") }
+    val filteredAssets = remember { mutableStateListOf<Asset>() }
 
     //------------------------------- Side Effects
-    //TODO: Properly handle Assets Sorting
-    //Init Sorted Assets
+    //TODO: Properly handle Assets Filtering
+    //Init Filtered Assets
     LaunchedEffect(assets) {
-        sortedAssets.addAll(
-            when (sortBy) {
+        filteredAssets.addAll(
+            when (filterBy) {
                 "All" -> assets
                 "Palette" -> assets.filter { it.tags.contains("palette") }
                 "Composition" -> assets.filter { it.tags.contains("composition") }
@@ -288,13 +287,14 @@ fun Inspirations(
                 else -> assets.filter { it.tags.contains("other") }
             }
         )
+        println("Initial Filtered Assets: $filteredAssets")
     }
 
-    LaunchedEffect(sortBy) {
-        //Update Sorted List
-        sortedAssets.clear()
-        sortedAssets.addAll(
-            when (sortBy) {
+    LaunchedEffect(filterBy) {
+        //Update Filtered List
+        filteredAssets.clear()
+        filteredAssets.addAll(
+            when (filterBy) {
                 "All" -> assets
                 "Palette" -> assets.filter { it.tags.contains("palette") }
                 "Composition" -> assets.filter { it.tags.contains("composition") }
@@ -317,7 +317,7 @@ fun Inspirations(
                 text = stringResource(Res.string.inspirations),
                 style = MaterialTheme.typography.headlineMedium
             )
-            SortDropdown { sortBy = it } //TODO: Handle empty data when filtered
+            FilterDropdown { filterBy = it } //TODO: Handle empty data when filtered
         }
         Spacer(Modifier.height(16.dp))
 
@@ -326,7 +326,7 @@ fun Inspirations(
             InspirationLoader()
         } else if (errorCaught) {
             //TODO: Handle Error
-        } else if (sortedAssets.isEmpty()) {
+        } else if (filteredAssets.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(144.dp).border(
                     width = 1.dp,
@@ -343,7 +343,7 @@ fun Inspirations(
             }
         } else {
             LazyRow {
-                items(sortedAssets) {
+                items(filteredAssets) {
                     InspirationItem(it, onAssetClick)
                     Spacer(modifier = Modifier.width(4.dp))
                 }

@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface FoldersRepository {
 
-    fun getAllItems(): Flow<Result<Pair<List<Folder>, List<Asset>>>>
+    fun getAllItems(token: String): Flow<Result<Pair<List<Folder>, List<Asset>>>>
 
-    suspend fun deleteFolder(folderId: String)
+    suspend fun deleteFolder(token: String, folderId: String)
 
-    suspend fun saveFolder(folder: Folder, parentId: String?)
+    suspend fun saveFolder(token: String, folder: Folder, parentId: String?)
 
 }

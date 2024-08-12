@@ -20,6 +20,6 @@ class AppPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
     }
 
     suspend fun setLoggedIn(loggedIn: Boolean) = dataStore.edit { settings ->
-        settings[FIRST_OPEN_KEY] = loggedIn
+        settings[LOGGED_IN_KEY] = loggedIn
     }
 }

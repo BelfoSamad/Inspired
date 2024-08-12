@@ -1,5 +1,7 @@
 package com.samadtch.inspired.feature.boarding
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException
@@ -12,9 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.viewmodel.ViewModel
-import moe.tlaster.precompose.viewmodel.viewModelScope
 
 class BoardingViewModel(
     private val configRepository: ConfigRepository,
@@ -49,7 +50,6 @@ class BoardingViewModel(
 
     fun authenticate(codeVerifier: String, code: String) {
         viewModelScope.launch {
-            println("AUTH IN")
             _loginState.emit(LOADING_STATE)//Loading State
             try {
                 userRepository.authenticate(codeVerifier, code)

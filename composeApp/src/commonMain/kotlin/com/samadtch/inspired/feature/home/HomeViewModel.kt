@@ -1,5 +1,7 @@
 package com.samadtch.inspired.feature.home
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.Result
 import com.samadtch.inspired.common.SUCCESS_STATE
@@ -7,19 +9,21 @@ import com.samadtch.inspired.common.exceptions.AuthException
 import com.samadtch.inspired.common.exceptions.DataException
 import com.samadtch.inspired.data.repositories.AssetsRepository
 import com.samadtch.inspired.data.repositories.FoldersRepository
+import com.samadtch.inspired.data.repositories.UserRepository
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.Folder
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.viewmodel.ViewModel
-import moe.tlaster.precompose.viewmodel.viewModelScope
 
 class HomeViewModel(
+    private val userRepository: UserRepository,
     private val foldersRepository: FoldersRepository,
     private val assetsRepository: AssetsRepository
 ) : ViewModel() {
@@ -27,11 +31,10 @@ class HomeViewModel(
     /* **************************************************************************
      * ************************************* Declarations
      */
-    val homeUiState: StateFlow<HomeUiState> = foldersRepository.getAllItems().map {
+    val homeUiState: StateFlow<HomeUiState> = getAllItems().map {
         when (it) {
             Result.Loading -> HomeUiState.Loading
             is Result.Error -> {
-                //TODO: Handle Re-Authentication
                 HomeUiState.Error(
                     type = if (it.exception is DataException) "DATA" else "AUTH",
                     code = if (it.exception is DataException) it.exception.code
@@ -60,11 +63,19 @@ class HomeViewModel(
     /* **************************************************************************
      * ************************************* Functions
      */
+    private fun getAllItems(): Flow<Result<Pair<List<Folder>, List<Asset>>>> = flow {
+        userRepository.performActionWithFreshToken { token ->
+            foldersRepository.getAllItems(token).collect { emit(it) }
+        }
+    }
+
     fun deleteFolder(folderId: String) {
         viewModelScope.launch {
             _deleteFolderState.emit(LOADING_STATE)//Loading State
             try {
-                foldersRepository.deleteFolder(folderId)
+                userRepository.performActionWithFreshToken {
+                    foldersRepository.deleteFolder(it, folderId)
+                }
                 _deleteFolderState.emit(SUCCESS_STATE)
             } //TODO: Properly handle returned errors
             catch (e: AuthException) {
@@ -81,7 +92,9 @@ class HomeViewModel(
         viewModelScope.launch {
             _saveFolderState.emit(LOADING_STATE)//Loading State
             try {
-                foldersRepository.saveFolder(folder, parentId)
+                userRepository.performActionWithFreshToken {
+                    foldersRepository.saveFolder(it, folder, parentId)
+                }
                 _saveFolderState.emit(SUCCESS_STATE)
             } //TODO: Properly handle returned errors
             catch (e: AuthException) {
@@ -98,7 +111,9 @@ class HomeViewModel(
         viewModelScope.launch {
             _createAssetState.emit(LOADING_STATE)//Loading State
             try {
-                assetsRepository.createAsset(asset)
+                userRepository.performActionWithFreshToken {
+                    assetsRepository.createAsset(it, asset)
+                }
                 _createAssetState.emit(SUCCESS_STATE)
             } //TODO: Properly handle returned errors
             catch (e: AuthException) {
@@ -115,7 +130,9 @@ class HomeViewModel(
         viewModelScope.launch {
             _deleteAssetState.emit(LOADING_STATE)//Loading State
             try {
-                assetsRepository.deleteAsset(assetId)
+                userRepository.performActionWithFreshToken {
+                    assetsRepository.deleteAsset(it, assetId)
+                }
                 _deleteAssetState.emit(SUCCESS_STATE)
             } //TODO: Properly handle returned errors
             catch (e: AuthException) {

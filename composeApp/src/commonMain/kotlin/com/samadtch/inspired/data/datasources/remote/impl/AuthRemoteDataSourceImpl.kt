@@ -20,13 +20,9 @@ class AuthRemoteDataSourceImpl(
 
     override suspend fun generateToken(codeVerifier: String, code: String): TokenGenOutput {
         return handleAuthError("generateToken") {
-            val req = client.post("oauth/token") {
+            client.post("oauth/token") {
                 contentType(ContentType.Application.FormUrlEncoded)
                 basicAuth(BuildKonfig.CLIENT_ID, BuildKonfig.CLIENT_SECRET)
-
-                println("Auth-2")
-                println(codeVerifier)
-                println(code)
                 val body = FormDataContent(
                     Parameters.build {
                         append("grant_type", "authorization_code")
@@ -35,15 +31,25 @@ class AuthRemoteDataSourceImpl(
                         append("redirect_uri", BuildKonfig.REDIRECT_URL)
                     }
                 )
-                println("BODY: $body")
                 setBody(body)
-            }
-            req.body<TokenGenOutput>()
+            }.body<TokenGenOutput>()
         }
     }
 
     override suspend fun refreshToken(refreshToken: String): TokenGenOutput {
-        TODO("Not yet implemented")
+        return handleAuthError("refreshToken") {
+            client.post("oauth/token") {
+                contentType(ContentType.Application.FormUrlEncoded)
+                basicAuth(BuildKonfig.CLIENT_ID, BuildKonfig.CLIENT_SECRET)
+                val body = FormDataContent(
+                    Parameters.build {
+                        append("grant_type", "refresh_token")
+                        append("refresh_token", refreshToken)
+                    }
+                )
+                setBody(body)
+            }.body<TokenGenOutput>()
+        }
     }
 
     override suspend fun getProfileName(token: String): String {

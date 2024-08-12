@@ -33,16 +33,10 @@
     <string name="authenticate">Authenticate</string>
     <string name="next">Next</string>
 
-    <!-- Sort -->
-    <string name="sort_all">All</string>
-    <string name="sort_palette">Palette</string>
-    <string name="sort_composition">Composition</string>
-    <string name="sort_typography">Typography</string>
-    <string name="sort_pattern">Pattern</string>
-    <string name="sort_other">Other</string>
-    <string name="sort_by">Sort By</string>
-    <string name="sort_by_val">Sort By: %1$s</string>
-    <string-array name="types"> <!-- TODO: Use these instead of above sort strings -->
+    <!-- Filter -->
+    <string name="filter_by">Filter By</string>
+    <string name="filter_by_val">Filter By: %1$s</string>
+    <string-array name="types">
         <item>All</item>
         <item>Palette</item>
         <item>Composition</item>

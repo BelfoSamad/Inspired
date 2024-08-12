@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.ui.components.CustomSnackbar
 import com.samadtch.inspired.ui.theme.InspiredTheme
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.PreComposeApp
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -28,60 +27,58 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App(
     onSplashScreenDone: () -> Unit,
     authorize: () -> Unit,
-    authorizationCode: Pair<String, StateFlow<String?>>,
+    authorizationCode: Pair<String, String>?,
     onFilePick: () -> Unit,
-    assetFile: StateFlow<AssetFile?>
+    assetFile: AssetFile?
 ) {
-    PreComposeApp {
-        //------------------------------- Declarations
-        val scope = rememberCoroutineScope()
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        val snackbarHostState = remember { SnackbarHostState() }
-        var snackbarSuccess by remember { mutableStateOf(false) }
+    //------------------------------- Declarations
+    val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
+    var snackbarSuccess by remember { mutableStateOf(false) }
 
-        //------------------------------- Effects
+    //------------------------------- Effects
+
+    //------------------------------- UI
+    InspiredTheme {
+        //------------------------------- Dialogs
 
         //------------------------------- UI
-        InspiredTheme {
-            //------------------------------- Dialogs
-
-            //------------------------------- UI
-            Scaffold(
-                snackbarHost = {
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        snackbar = {
-                            CustomSnackbar(
-                                isSuccess = snackbarSuccess,
-                                content = it.visuals.message
-                            )
-                        }
-                    )
-                }
-            ) {
-                Nav(
-                    modifier = Modifier.fillMaxSize().padding(it),
-                    onSplashScreenDone = onSplashScreenDone,
-                    onShowSnackbar = { success, message, action ->
-                        snackbarSuccess = success
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = message,
-                                actionLabel = action,
-                                duration = SnackbarDuration.Short,
-                            )
-                        }
-                    },
-                    authorize = authorize,
-                    authorizationCode = authorizationCode,
-                    onLogout = {
-                        //TODO: Handle State when Logging Out
-                    },
-                    onDrawerMenuClick = { scope.launch { drawerState.open() } },
-                    onFilePick = onFilePick,
-                    assetFile = assetFile
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    snackbar = {
+                        CustomSnackbar(
+                            isSuccess = snackbarSuccess,
+                            content = it.visuals.message
+                        )
+                    }
                 )
             }
+        ) {
+            Nav(
+                modifier = Modifier.fillMaxSize().padding(it),
+                onSplashScreenDone = onSplashScreenDone,
+                onShowSnackbar = { success, message, action ->
+                    snackbarSuccess = success
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = message,
+                            actionLabel = action,
+                            duration = SnackbarDuration.Short,
+                        )
+                    }
+                },
+                authorize = authorize,
+                authorizationCode = authorizationCode,
+                onLogout = {
+                    //TODO: Handle State when Logging Out
+                },
+                onDrawerMenuClick = { scope.launch { drawerState.open() } },
+                onFilePick = onFilePick,
+                assetFile = assetFile
+            )
         }
     }
 }

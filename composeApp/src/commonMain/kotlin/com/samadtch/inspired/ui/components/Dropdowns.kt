@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.samadtch.inspired.domain.models.Folder
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -114,13 +115,15 @@ fun Dropdown(
 }
 
 @Composable
-fun SortDropdown(
+fun FilterDropdown(
     modifier: Modifier = Modifier,
-    onSortPicked: (String) -> Unit
+    onFilterPicked: (String) -> Unit
 ) {
     //------------------------------- Declarations
-    var sortBy by remember { mutableStateOf("All") }
+    var filterBy by remember { mutableStateOf("All") }
     var expanded by remember { mutableStateOf(false) }
+
+    val types = stringArrayResource(Res.array.types)
 
     //------------------------------- UI
     Column(modifier) {
@@ -135,7 +138,7 @@ fun SortDropdown(
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .align(Alignment.CenterVertically),
-                text = stringResource(Res.string.sort_by_val, sortBy),
+                text = stringResource(Res.string.filter_by_val, filterBy),
                 style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary)
             )
             Icon(
@@ -150,206 +153,48 @@ fun SortDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            //Sort By
+            //Filter By
             Text(
                 modifier = Modifier.padding(top = 16.dp, start = 24.dp),
-                text = stringResource(Res.string.sort_by),
+                text = stringResource(Res.string.filter_by),
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = MaterialTheme.colorScheme.secondary
                 )
             )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_all),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "All"
-                                onSortPicked("All")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_all)
-                        )
+            types.forEach {
+                DropdownMenuItem(
+                    text = {
+                        Row(Modifier.fillMaxWidth()) {
+                            Checkbox(
+                                checked = filterBy == it,
+                                colors = CheckboxDefaults.colors(
+                                    uncheckedColor = MaterialTheme.colorScheme.secondary,
+                                    checkedColor = MaterialTheme.colorScheme.tertiary,
+                                    checkmarkColor = MaterialTheme.colorScheme.onTertiary,
+                                ),
+                                onCheckedChange = {
+                                    filterBy = "All"
+                                    onFilterPicked("All")
+                                    expanded = false
+                                },
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .weight(1f)
+                                    .padding(end = 16.dp),
+                                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
+                                text = it
+                            )
+                        }
+                    },
+                    onClick = {
+                        filterBy = it
+                        onFilterPicked(it)
+                        expanded = false
                     }
-                },
-                onClick = {
-                    sortBy = "All"
-                    onSortPicked("All")
-                    expanded = false
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_palette),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "Palette"
-                                onSortPicked("Palette")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_palette)
-                        )
-                    }
-                },
-                onClick = {
-                    sortBy = "Palette"
-                    onSortPicked("Palette")
-                    expanded = false
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_composition),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "Composition"
-                                onSortPicked("Composition")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_composition)
-                        )
-                    }
-                },
-                onClick = {
-                    sortBy = "Composition"
-                    onSortPicked("Composition")
-                    expanded = false
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_typography),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "Typography"
-                                onSortPicked("Typography")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_typography)
-                        )
-                    }
-                },
-                onClick = {
-                    sortBy = "Typography"
-                    onSortPicked("Typography")
-                    expanded = false
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_pattern),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "Pattern"
-                                onSortPicked("Pattern")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_pattern)
-                        )
-                    }
-                },
-                onClick = {
-                    sortBy = "Pattern"
-                    onSortPicked("Pattern")
-                    expanded = false
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = sortBy == stringResource(Res.string.sort_other),
-                            colors = CheckboxDefaults.colors(
-                                uncheckedColor = MaterialTheme.colorScheme.secondary,
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                checkmarkColor = MaterialTheme.colorScheme.onTertiary,
-                            ),
-                            onCheckedChange = {
-                                sortBy = "Other"
-                                onSortPicked("Other")
-                                expanded = false
-                            },
-                        )
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .weight(1f)
-                                .padding(end = 16.dp),
-                            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary),
-                            text = stringResource(Res.string.sort_other)
-                        )
-                    }
-                },
-                onClick = {
-                    sortBy = "Other"
-                    onSortPicked("Other")
-                    expanded = false
-                }
-            )
+                )
+            }
         }
     }
 }

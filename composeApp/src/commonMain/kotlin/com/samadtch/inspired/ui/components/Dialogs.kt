@@ -133,12 +133,18 @@ fun FolderEditorDialog(
 
     //------------------------------- Side Effect
     LaunchedEffect(folderSaveState) {
-        if (folderSaveState == SUCCESS_STATE) onDismiss()
+        if (folderSaveState == SUCCESS_STATE) {
+            name = "" //Reset Input
+            onDismiss()
+        }
     }
 
     //------------------------------- UI
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = {
+            name = "" //Reset Input
+            onDismiss()
+        },
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -160,6 +166,7 @@ fun FolderEditorDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
+                enabled = folderSaveState != LOADING_STATE,
                 shape = MaterialTheme.shapes.extraLarge,
                 textStyle = MaterialTheme.typography.labelSmall,
                 placeholder = {
@@ -315,9 +322,8 @@ fun AssetEditorDialog(
     var errorTag by remember { mutableStateOf<StringResource?>(null) }
 
     //Types
-    val types = stringArrayResource(Res.array.types).filter { it != "All" }
+    val types = stringArrayResource(Res.array.types).filter { it != "All" && it != "Other" }
     var type by remember { mutableStateOf<String?>(null) }
-    var errorType by remember { mutableStateOf<StringResource?>(null) }
 
     //Other
     var folderId by remember { mutableStateOf("root") }
@@ -325,12 +331,27 @@ fun AssetEditorDialog(
 
     //------------------------------- Side Effects
     LaunchedEffect(assetCreatedState) {
-        if (assetCreatedState == SUCCESS_STATE) onDismiss()
+        //Reset State
+        if (assetCreatedState == SUCCESS_STATE) {
+            //Dismiss
+            onDismiss()
+
+            //Reset
+            name = ""
+            folderId = "root"
+            type = null
+            tag = ""; tags.clear()
+        }
     }
 
     //------------------------------- UI
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = {
+            onDismiss()
+            //Reset
+            name = ""
+            tag = ""; tags.clear()
+        },
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -378,6 +399,7 @@ fun AssetEditorDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
+                    enabled = assetCreatedState != LOADING_STATE,
                     shape = MaterialTheme.shapes.extraLarge,
                     textStyle = MaterialTheme.typography.labelSmall,
                     placeholder = {
@@ -404,11 +426,6 @@ fun AssetEditorDialog(
                     options = types,
                     onItemPicked = { type = types[it] }
                 )
-                if (errorType != null) Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = stringResource(errorType!!),
-                    style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.error)
-                )
                 Spacer(Modifier.height(16.dp))
 
                 //Pick Folder
@@ -430,6 +447,7 @@ fun AssetEditorDialog(
                             .weight(1f)
                             .padding(end = 8.dp)
                             .wrapContentHeight(),
+                        enabled = assetCreatedState != LOADING_STATE,
                         shape = MaterialTheme.shapes.extraLarge,
                         textStyle = MaterialTheme.typography.labelSmall,
                         placeholder = {
@@ -485,7 +503,7 @@ fun AssetEditorDialog(
                                 name = name,
                                 tags = tags.apply {
                                     add("inspiration")
-                                    type?.let { add(it.lowercase()) }
+                                    if(type == null) add("other") else add(type!!.lowercase())
                                 }.toList(),
                                 folderId = folderId,
                                 assetFile = assetFile

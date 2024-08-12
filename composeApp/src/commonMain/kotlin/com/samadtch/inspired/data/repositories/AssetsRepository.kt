@@ -4,8 +4,8 @@ import com.samadtch.inspired.domain.models.Asset
 
 interface AssetsRepository {
 
-    suspend fun createAsset(asset: Asset)
+    suspend fun createAsset(token: String, asset: Asset)
 
-    suspend fun deleteAsset(assetId: String)
+    suspend fun deleteAsset(token: String, assetId: String)
 
 }

@@ -6,5 +6,5 @@ import org.koin.dsl.module
 
 val viewmodelModule = module {
     single<BoardingViewModel> { BoardingViewModel(get(), get()) }
-    single<HomeViewModel> { HomeViewModel(get(), get()) }
+    single<HomeViewModel> { HomeViewModel(get(), get(), get()) }
 }

@@ -80,8 +80,9 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.navigation.compose)
 
             //Ktor
             implementation(libs.ktor.client.core)
@@ -96,7 +97,8 @@ kotlin {
             implementation(libs.precompose.koin)
 
             //Koin
-            implementation(libs.koin.core)//Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
 
             //Others
             implementation(libs.kotlinx.datetime)//DateTime

@@ -4,15 +4,13 @@ android-compileSdk = "34"
 android-minSdk = "24"
 android-targetSdk = "34"
 androidx-activityCompose = "1.9.1"
-androidx-espresso-core = "3.6.1"
 androidx-lifecycle = "2.8.0"
 lifecycleRuntimeKtx = "2.8.4"
 androidx-material = "1.12.0"
-androidx-test-junit = "1.2.1"
 compose-plugin = "1.6.11"
-junit = "4.13.2"
 kotlin = "2.0.0"
 koin = "3.5.6"
+koin-ext = "4.0.0-RC1"
 gms = "4.4.2"
 datastore = "1.1.1"
 crashlytics = "3.0.2"
@@ -22,34 +20,31 @@ ktor = "2.3.11"
 firebase-bom = "33.1.2"
 review = "2.0.1"
 buildConfig = "0.15.1"
-precompose = "1.6.0-rc02"
+precompose = "1.6.1"
 hilt = "2.51"
 hilt-tools = "1.2.0"
 palette = "1.0.0"
 auth = "0.11.1"
 security = "1.1.0-alpha06"
 browser = "1.8.0"
+androidx-navigation = "2.7.0-alpha07"
 
 [libraries]
 buildKonfig = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildConfig" }
-
-# Testing
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-junit" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-espresso-core" }
 
 # Android
 androidx-material = { group = "com.google.android.material", name = "material", version.ref = "androidx-material" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 androidx-palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
+
+# Compose
+androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation" }
 
 # Pre-Compose
 precompose-core = { module = "moe.tlaster:precompose", version.ref = "precompose" }
@@ -78,6 +73,7 @@ hilt-compose-navigation = { module = "androidx.hilt:hilt-navigation-compose", ve
 # Koin
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-ext" }
 
 # Others
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime-ktx" }

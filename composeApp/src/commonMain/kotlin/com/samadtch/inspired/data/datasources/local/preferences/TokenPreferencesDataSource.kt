@@ -4,13 +4,15 @@ import org.koin.core.module.Module
 
 interface TokenPreferencesDataSource {
 
-    fun saveToken(accessToken: String, refreshToken: String)
+    fun saveToken(accessToken: String, refreshToken: String, expiresAt: Int)
 
     fun resetTokens()
 
     fun getAccessToken(): String?
 
     fun getRefreshToken(): String?
+
+    fun expiresAt(): Int
 
 }
 

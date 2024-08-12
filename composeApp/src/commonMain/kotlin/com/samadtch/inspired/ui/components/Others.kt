@@ -58,7 +58,10 @@ fun CustomSnackbar(content: String, isSuccess: Boolean = false) {
     ) {
         Text(
             text = content,
-            style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary),
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = if (isSuccess) MaterialTheme.colorScheme.onTertiary
+                else MaterialTheme.colorScheme.onError
+            ),
             textAlign = TextAlign.Center
         )
     }
