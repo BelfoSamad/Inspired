@@ -52,8 +52,4 @@ class AuthRemoteDataSourceImpl(
         }
     }
 
-    override suspend fun getProfileName(token: String): String {
-        TODO("Not yet implemented")
-    }
-
 }

@@ -66,8 +66,6 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
-//TODO: Reset Dialogs after show/hide
-
 /* **************************************************************************
  * ************************************* Folders
  */

@@ -13,7 +13,7 @@ import org.koin.dsl.module
 
 val repositoriesModule = module {
     single<ConfigRepository> {
-        ConfigRepositoryImpl(get())
+        ConfigRepositoryImpl(get(), get())
         //FakeConfigRepository()
     }
     single<UserRepository> {

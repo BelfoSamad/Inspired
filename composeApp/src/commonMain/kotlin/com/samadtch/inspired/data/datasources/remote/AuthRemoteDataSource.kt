@@ -8,6 +8,4 @@ interface AuthRemoteDataSource {
 
     suspend fun refreshToken(refreshToken: String): TokenGenOutput
 
-    suspend fun getProfileName(token: String): String
-
 }

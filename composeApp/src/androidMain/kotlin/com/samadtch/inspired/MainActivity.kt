@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.IntentCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
@@ -47,6 +49,7 @@ class MainActivity : FragmentActivity() {
      */
     @Inject
     lateinit var remoteConfig: FirebaseRemoteConfig
+    private val viewModel: AppViewModel by viewModels()
 
     //Loading
     private val _loaded = MutableStateFlow(true)
@@ -101,10 +104,22 @@ class MainActivity : FragmentActivity() {
                 val context = LocalContext.current
                 val receivedCode by code.collectAsState()
                 val receivedAssetFile by assetFile.collectAsState()
+                val appState by viewModel.initUiState.collectAsState()
 
                 //------------------------------- UI
                 App(
+                    appState = appState,
                     onSplashScreenDone = { lifecycleScope.launch { _loaded.emit(false) } },
+                    openWebPage = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
+                    launchReview = {
+                        reviewManager = ReviewManagerFactory.create(this)
+                        val request = reviewManager.requestReviewFlow()
+                        request.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                reviewInfo = task.result
+                            }
+                        }
+                    },
                     authorize = {
                         //Request Authorization Code
                         val authParams = mapOf(
@@ -129,7 +144,8 @@ class MainActivity : FragmentActivity() {
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    assetFile = receivedAssetFile
+                    assetFile = receivedAssetFile,
+                    logout = { viewModel.logout() }
                 )
             }
         }

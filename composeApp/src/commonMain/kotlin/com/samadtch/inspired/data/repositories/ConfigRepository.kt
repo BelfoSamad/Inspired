@@ -12,4 +12,6 @@ interface ConfigRepository {
 
     suspend fun setLoggedIn(loggedIn: Boolean)
 
+    suspend fun getAppDetails(): Map<String, String>
+
 }

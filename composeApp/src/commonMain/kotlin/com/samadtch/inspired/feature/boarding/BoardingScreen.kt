@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -105,7 +106,8 @@ internal fun BoardingRoot(
         onAuthClick = {
             viewModel.setFirstTimeOpened()
             authorize()
-        }
+        },
+        loginState = loginState
     )
 }
 
@@ -113,7 +115,9 @@ internal fun BoardingRoot(
 @Composable
 fun BoardingScreen(
     modifier: Modifier = Modifier,
-    onAuthClick: () -> Unit, goLast: Boolean
+    onAuthClick: () -> Unit,
+    goLast: Boolean,
+    loginState: Int?
 ) {
     //------------------------------- Declarations
     //Boarding Content
@@ -179,6 +183,13 @@ fun BoardingScreen(
                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                 } else onAuthClick()
             }) {
+                if (loginState == LOADING_STATE) CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(0.dp, 0.dp, 16.dp, 0.dp)
+                        .size(28.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
                 Text(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     text = if (pagerState.currentPage < titles.size - 1) stringResource(Res.string.next)
