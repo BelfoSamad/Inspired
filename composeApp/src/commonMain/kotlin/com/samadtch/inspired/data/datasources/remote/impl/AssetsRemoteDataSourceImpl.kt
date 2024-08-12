@@ -1,5 +1,8 @@
 package com.samadtch.inspired.data.datasources.remote.impl
 
+import com.samadtch.inspired.common.exceptions.DataException
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_FILE_TOO_BIG
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_IMPORT_FAILED
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.AssetsRemoteDataSource
 import com.samadtch.inspired.data.datasources.remote.dto.AssetInput
@@ -82,7 +85,9 @@ class AssetsRemoteDataSourceImpl(
                     }
 
                     "failed" -> {
-                        //TODO: Handle Return Error State
+                        val error = assetUploadJob.job.error!!
+                        if (error.code == "file_too_big") throw DataException(API_ERROR_FILE_TOO_BIG)
+                        else throw DataException(API_ERROR_IMPORT_FAILED)
                     }
                 }
             }

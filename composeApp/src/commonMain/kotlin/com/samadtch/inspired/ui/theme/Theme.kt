@@ -260,7 +260,6 @@ fun InspiredTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-//        typography = typography,
         content = content
     )
 }

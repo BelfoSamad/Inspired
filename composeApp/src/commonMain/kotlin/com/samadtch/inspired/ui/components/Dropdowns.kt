@@ -42,7 +42,8 @@ fun Dropdown(
     hint: String,
     options: List<String>,
     onItemPicked: (Int) -> Unit,
-    isError: Boolean = false
+    isError: Boolean = false,
+    enabled: Boolean = true
 ) {
     //------------------------------- Declarations
     val interactionSource = remember { MutableInteractionSource() }
@@ -57,7 +58,7 @@ fun Dropdown(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
-                ) { expanded = true }
+                ) { if (enabled) expanded = true }
                 .border(
                     BorderStroke(
                         width = 1.dp,
@@ -205,7 +206,8 @@ fun FoldersDropdown(
     hint: String,
     folders: List<Folder>,
     onFolderPicked: (String) -> Unit,
-    isError: Boolean = false
+    isError: Boolean = false,
+    enabled: Boolean = true
 ) {
     //------------------------------- Declarations
     val interactionSource = remember { MutableInteractionSource() }
@@ -220,7 +222,7 @@ fun FoldersDropdown(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
-                ) { expanded = true }
+                ) { if(enabled) expanded = true }
                 .border(
                     border = BorderStroke(
                         width = 1.dp,

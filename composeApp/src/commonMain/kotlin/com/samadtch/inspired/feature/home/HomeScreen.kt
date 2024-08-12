@@ -1,5 +1,6 @@
 package com.samadtch.inspired.feature.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,15 +23,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pattern
 import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,26 +45,32 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_MISSING
+import com.samadtch.inspired.common.LOADING_STATE
+import com.samadtch.inspired.common.SUCCESS_STATE
+import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_AUTH
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NETWORK
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NOT_FOUND
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_RATE_LIMIT
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_REQUEST_OTHER
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_SERVER_OTHER
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
 import com.samadtch.inspired.ui.components.AssetDialog
 import com.samadtch.inspired.ui.components.AssetEditorDialog
+import com.samadtch.inspired.ui.components.ErrorMessage
+import com.samadtch.inspired.ui.components.FilterDropdown
 import com.samadtch.inspired.ui.components.FolderDialog
 import com.samadtch.inspired.ui.components.FolderEditorDialog
-import com.samadtch.inspired.ui.components.FilterDropdown
 import com.samadtch.inspired.ui.components.shimmerEffect
-import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
+import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 const val HOME_ROUTE = "/home"
@@ -81,10 +91,39 @@ internal fun HomeRoute(
     val saveFolderState by viewModel.saveFolderState.collectAsStateWithLifecycle()
     val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
     val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
+    val actionStates =
+        listOf(deleteFolderState, saveFolderState, createAssetState, deleteAssetState)
+
+    //Errors
+    val errorAuth = stringResource(Res.string.error_auth)
+    val errorAuthServer = stringResource(Res.string.error_auth_server)
+    val errorNetwork = stringResource(Res.string.error_network)
+    val errorRateLimit = stringResource(Res.string.error_rate_limit)
+    val errorNotFound = stringResource(Res.string.error_not_found)
+    val errorDataRequest = stringResource(Res.string.error_data_request)
+    val errorDataServer = stringResource(Res.string.error_data_server)
+    val errorDataOther = stringResource(Res.string.error_data_other)
 
     //------------------------------- Side Effects
-    //TODO: Handle Action Error States
-    //TODO: Handle Returns! [Created Folder, Updated Folder Name, Created Asset]
+
+    //all actions have the same error codes returned, handle them all here
+    LaunchedEffect(actionStates) {
+        val actionCode = actionStates.filterNotNull().firstOrNull()
+        if (actionCode !in listOf(null, LOADING_STATE, SUCCESS_STATE)) when (actionCode) {
+            AUTH_TOKEN_SERVER_ERROR_OTHER -> onShowSnackbar(false, errorAuthServer, null)
+            API_ERROR_AUTH -> {
+                onShowSnackbar(false, errorAuth, null)
+                onLogout()
+            }
+
+            API_ERROR_NETWORK -> onShowSnackbar(false, errorNetwork, null)
+            API_ERROR_RATE_LIMIT -> onShowSnackbar(false, errorRateLimit, null)
+            API_ERROR_NOT_FOUND -> onShowSnackbar(false, errorNotFound, null)
+            API_ERROR_REQUEST_OTHER -> onShowSnackbar(false, errorDataRequest, null)
+            API_ERROR_SERVER_OTHER -> onShowSnackbar(false, errorDataServer, null)
+            else -> onShowSnackbar(false, errorDataOther, null)
+        } else if (actionCode == SUCCESS_STATE) viewModel.refresh()
+    }
 
     //------------------------------- Dialogs
     //Folder Editor
@@ -98,6 +137,7 @@ internal fun HomeRoute(
         onDismiss = {
             folderAddDialog = null
             folderUpdateDialog = null
+            viewModel.resetStates()
         }
     )
 
@@ -111,7 +151,10 @@ internal fun HomeRoute(
         },
         onFolderDelete = viewModel::deleteFolder,
         folderDeleteState = deleteFolderState,
-        onDismiss = { folderDialog = null }
+        onDismiss = {
+            folderDialog = null
+            viewModel.resetStates()
+        }
     )
 
     //Asset Dialog
@@ -120,7 +163,10 @@ internal fun HomeRoute(
         asset = assetDialog!!,
         onAssetDelete = viewModel::deleteAsset,
         assetDeleteState = deleteAssetState,
-        onDismiss = { assetDialog = null }
+        onDismiss = {
+            assetDialog = null
+            viewModel.resetStates()
+        }
     )
 
     //Asset Editor Dialog
@@ -131,7 +177,10 @@ internal fun HomeRoute(
         onFilePickClick = onFilePick,
         onAssetAdd = viewModel::createAsset,
         assetCreatedState = createAssetState,
-        onDismiss = { showAddAssetDialog = false }
+        onDismiss = {
+            showAddAssetDialog = false
+            viewModel.resetStates()
+        }
     )
 
     //------------------------------- UI
@@ -169,8 +218,11 @@ fun HomeScreen(
     //Errors
     val networkError = stringResource(Res.string.error_network)
     val rateLimitError = stringResource(Res.string.error_rate_limit)
-    val authOtherError = stringResource(Res.string.error_auth_other)
-    val dataOtherError = stringResource(Res.string.error_data_other)
+    val errorAuth = stringResource(Res.string.error_auth)
+    val errorAuthServer = stringResource(Res.string.error_auth_server)
+    val errorNotFound = stringResource(Res.string.error_not_found)
+    val errorDataRequest = stringResource(Res.string.error_data_request)
+    val errorDataServer = stringResource(Res.string.error_data_server)
 
     //------------------------------- Side Effects
     LaunchedEffect(homeUiState) {
@@ -181,8 +233,16 @@ fun HomeScreen(
                 when (homeUiState.type) {
                     "AUTH" -> {
                         when (homeUiState.code) {
-                            AUTH_TOKEN_MISSING -> onLogout()
-                            else -> onShowSnackbar(false, authOtherError, null)
+                            AUTH_TOKEN_SERVER_ERROR_OTHER -> onShowSnackbar(
+                                false,
+                                errorAuthServer,
+                                null
+                            )
+
+                            API_ERROR_AUTH -> {
+                                onShowSnackbar(false, errorAuth, null)
+                                onLogout()
+                            }
                         }
                     }
 
@@ -190,7 +250,9 @@ fun HomeScreen(
                         when (homeUiState.code) {
                             API_ERROR_NETWORK -> onShowSnackbar(false, networkError, null)
                             API_ERROR_RATE_LIMIT -> onShowSnackbar(false, rateLimitError, null)
-                            else -> onShowSnackbar(false, dataOtherError, null)
+                            API_ERROR_NOT_FOUND -> onShowSnackbar(false, errorNotFound, null)
+                            API_ERROR_REQUEST_OTHER -> onShowSnackbar(false, errorDataRequest, null)
+                            API_ERROR_SERVER_OTHER -> onShowSnackbar(false, errorDataServer, null)
                         }
                     }
                 }
@@ -211,21 +273,22 @@ fun HomeScreen(
     //------------------------------- UI
     Column(
         modifier = modifier.verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 24.dp)
+            .padding(start = 16.dp, top = 24.dp, bottom = 24.dp)
     ) {
         //Top Section
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(Res.string.app_name),
                 style = MaterialTheme.typography.displayMedium.copy(
-                    fontFamily = FontFamily(Font(Res.font.display_bold))
+                    fontFamily = FontFamily(Font(Res.font.logo_font)),
+                    color = MaterialTheme.colorScheme.primary
                 )
             )
-            OutlinedIconButton(onClick = { onDrawerMenuClick() }) {
+            FilledTonalIconButton(onClick = { onDrawerMenuClick() }) {
                 Icon(Icons.Default.Menu, null)
             }
         }
@@ -234,9 +297,11 @@ fun HomeScreen(
         //Slogan
         Text(
             text = stringResource(Res.string.slogan),
-            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold)
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontFamily = FontFamily(Font(Res.font.font_bold))
+            )
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         //Inspirations
         Inspirations(
@@ -264,7 +329,7 @@ fun HomeScreen(
 fun Inspirations(
     modifier: Modifier,
     loading: Boolean = true,
-    errorCaught: Boolean = false,
+    errorCaught: Boolean = true,
     assets: List<Asset>,
     onAssetClick: (Asset) -> Unit,
     onAssetAddClick: () -> Unit,
@@ -274,7 +339,6 @@ fun Inspirations(
     val filteredAssets = remember { mutableStateListOf<Asset>() }
 
     //------------------------------- Side Effects
-    //TODO: Properly handle Assets Filtering
     //Init Filtered Assets
     LaunchedEffect(assets) {
         filteredAssets.addAll(
@@ -287,7 +351,6 @@ fun Inspirations(
                 else -> assets.filter { it.tags.contains("other") }
             }
         )
-        println("Initial Filtered Assets: $filteredAssets")
     }
 
     LaunchedEffect(filterBy) {
@@ -309,15 +372,17 @@ fun Inspirations(
     Column(modifier) {
         //Top Section
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(Res.string.inspirations),
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFamily = FontFamily(Font(Res.font.font_bold))
+                )
             )
-            FilterDropdown { filterBy = it } //TODO: Handle empty data when filtered
+            FilterDropdown { filterBy = it }
         }
         Spacer(Modifier.height(16.dp))
 
@@ -325,7 +390,7 @@ fun Inspirations(
         if (loading) {
             InspirationLoader()
         } else if (errorCaught) {
-            //TODO: Handle Error
+            ErrorMessage(Res.string.data_error)
         } else if (filteredAssets.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(144.dp).border(
@@ -352,7 +417,7 @@ fun Inspirations(
                         Box(
                             modifier = Modifier.width(96.dp).height(144.dp).border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                color = MaterialTheme.colorScheme.secondaryContainer,
                                 shape = MaterialTheme.shapes.large
                             ).clickable { onAssetAddClick() },
                             contentAlignment = Alignment.Center
@@ -391,21 +456,22 @@ fun InspirationItem(
     asset: Asset, onAssetClick: (Asset) -> Unit
 ) {
     Column(Modifier.width(96.dp)) {
-        Box(
-            modifier = Modifier.fillMaxWidth().height(144.dp).background(
-                color = MaterialTheme.colorScheme.tertiaryContainer,
-                shape = MaterialTheme.shapes.large
-            ).clickable { onAssetClick(asset) }, contentAlignment = Alignment.Center
+        Card(
+            modifier = Modifier.fillMaxWidth().height(144.dp).clickable { onAssetClick(asset) },
         ) {
-            Icon(
-                modifier = Modifier.align(Alignment.Center), imageVector = when {
-                    asset.tags.contains("palette") -> Icons.Default.Colorize
-                    asset.tags.contains("composition") -> Icons.Default.Casino
-                    asset.tags.contains("typography") -> Icons.Default.TextFields
-                    asset.tags.contains("pattern") -> Icons.Default.Pattern
-                    else -> Icons.Default.PlusOne
-                }, contentDescription = null
-            )
+            Box(Modifier.fillMaxSize()) {
+                Icon(
+                    modifier = Modifier.align(Alignment.Center).size(24.dp),
+                    imageVector = when {
+                        asset.tags.contains("palette") -> Icons.Default.Colorize
+                        asset.tags.contains("composition") -> Icons.Default.Casino
+                        asset.tags.contains("typography") -> Icons.Default.TextFields
+                        asset.tags.contains("pattern") -> Icons.Default.Pattern
+                        else -> Icons.Default.PlusOne
+                    },
+                    contentDescription = null
+                )
+            }
         }
         Text(
             modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
@@ -434,7 +500,9 @@ fun Folders(
         ) {
             Text(
                 text = stringResource(Res.string.folders),
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFamily = FontFamily(Font(Res.font.font_bold))
+                )
             )
             IconButton(onClick = { onFolderAddClick("root") }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
@@ -444,7 +512,10 @@ fun Folders(
         if (loading) {
             FolderLoader()
         } else if (errorCaught || folders.isEmpty()) {
-            //TODO: Handle Error
+            ErrorMessage(
+                if (folders.isEmpty()) Res.string.empty_error
+                else Res.string.data_error
+            )
         } else {
             folders.forEach {
                 FolderItem(it, onFolderClick, onFolderAddClick)

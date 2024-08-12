@@ -12,6 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -31,10 +32,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.PreComposeApp
-import androidx.compose.runtime.collectAsState
-import kotlinx.coroutines.delay
-import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
-import moe.tlaster.precompose.lifecycle.currentLocalLifecycleOwner
 import okio.ByteString.Companion.encodeUtf8
 import javax.inject.Inject
 
@@ -52,7 +49,7 @@ class MainActivity : FragmentActivity() {
     lateinit var remoteConfig: FirebaseRemoteConfig
 
     //Loading
-    private val _loaded = MutableStateFlow(false) //TODO: Make true again
+    private val _loaded = MutableStateFlow(true)
     private val loaded = _loaded.asStateFlow()
 
     //Authorization Code
@@ -72,8 +69,7 @@ class MainActivity : FragmentActivity() {
 
     //Picker
     private val imagePicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) {
-        // Handle the returned Uri
-        it?.let { sendImage(it) }
+        it?.let { sendImage(it) } // Handle the returned Uri
     }
 
     /***********************************************************************************************
@@ -98,7 +94,6 @@ class MainActivity : FragmentActivity() {
             Log.d(TAG, "onCreate: " + e.message)
         }
 
-        val _context = this
         //UI
         setContent {
             PreComposeApp {
@@ -125,7 +120,7 @@ class MainActivity : FragmentActivity() {
 
                         //Make Call
                         CustomTabsIntent.Builder().build().launchUrl(
-                            _context, Uri.parse("${BuildKonfig.AUTH_URL}?$authParams")
+                            context, Uri.parse("${BuildKonfig.AUTH_URL}?$authParams")
                         )
                     },
                     authorizationCode = if (receivedCode == null) null else PKCEUtil.getCodeVerifier() to receivedCode!!,
@@ -142,11 +137,8 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        println("ON RESUME")
         //Handle Intent (Image Picking, Auth)
         handleIntent(intent)
-
     }
 
     private fun initReviewManager() {

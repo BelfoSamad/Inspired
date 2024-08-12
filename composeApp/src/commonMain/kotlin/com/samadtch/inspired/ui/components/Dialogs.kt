@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Pattern
 import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material.icons.filled.TextFields
@@ -44,20 +47,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_FILE_TOO_BIG
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_IMPORT_FAILED
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
 import inspired.composeapp.generated.resources.Res
 import inspired.composeapp.generated.resources.*
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
-//TODO: Disable Inputs while Loading
 //TODO: Reset Dialogs after show/hide
 
 /* **************************************************************************
@@ -84,11 +92,24 @@ fun FolderDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Icon(
+                    tint = MaterialTheme.colorScheme.secondaryContainer,
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = null
+                )
+                Spacer(Modifier.height(4.dp))
                 Text(
                     text = folder.name,
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontFamily = FontFamily(Font(Res.font.font_medium)),
+                    )
                 )
-                //TODO: maybe add createdAt?
+                Text(
+                    text = folder.createdAt!!.format((DateTimeComponents.Formats.RFC_1123)),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontFamily = FontFamily(Font(Res.font.font_medium)),
+                    )
+                )
             }
         },
         confirmButton = {
@@ -154,7 +175,9 @@ fun FolderEditorDialog(
                 Text(
                     text = if (folder == null) stringResource(Res.string.add_folder)
                     else stringResource(Res.string.update_folder),
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontFamily = FontFamily(Font(Res.font.font_medium)),
+                    )
                 )
                 IconButton(onClick = { onDismiss() }) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -163,16 +186,14 @@ fun FolderEditorDialog(
         },
         text = {
             OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = folderSaveState != LOADING_STATE,
                 shape = MaterialTheme.shapes.extraLarge,
-                textStyle = MaterialTheme.typography.labelSmall,
+                textStyle = MaterialTheme.typography.labelMedium,
                 placeholder = {
                     Text(
                         text = stringResource(Res.string.folder_name_placeholder),
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelMedium
                     )
                 },
                 isError = error != null,
@@ -189,7 +210,7 @@ fun FolderEditorDialog(
         confirmButton = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.Center
             ) {
                 FilledTonalButton(
                     onClick = {
@@ -237,43 +258,41 @@ fun AssetDialog(
     AlertDialog(
         onDismissRequest = { onDismiss() },
         text = {
-            Column(Modifier.fillMaxWidth()) {
-                //Top Section
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(128.dp)
-                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
-                ) {
-                    IconButton(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(top = 8.dp, end = 8.dp),
-                        onClick = { onDismiss() }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                    }
-                    Icon(
-                        modifier = Modifier.align(Alignment.Center),
-                        imageVector = when {
-                            asset.tags.contains("palette") -> Icons.Default.Colorize
-                            asset.tags.contains("composition") -> Icons.Default.Casino
-                            asset.tags.contains("typography") -> Icons.Default.TextFields
-                            asset.tags.contains("pattern") -> Icons.Default.Pattern
-                            else -> Icons.Default.PlusOne
-                        },
-                        contentDescription = null
-                    )
-                }
-
-                //Asset Content
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = asset.name,
-                    style = MaterialTheme.typography.titleMedium
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    tint = MaterialTheme.colorScheme.secondaryContainer,
+                    imageVector = Icons.Default.Inventory2,
+                    contentDescription = null
                 )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = asset.name,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontFamily = FontFamily(Font(Res.font.font_medium)),
+                    )
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = asset.createdAt!!.format((DateTimeComponents.Formats.RFC_1123)),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontFamily = FontFamily(Font(Res.font.font_medium)),
+                    )
+                )
+                Spacer(Modifier.height(4.dp))
                 FlowRow {
                     asset.tags.forEach {
-                        SuggestionChip(onClick = {}, label = { Text(it) })
+                        SuggestionChip(
+                            onClick = {},//Do Nothing
+                            label = {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        )
                         Spacer(Modifier.width(4.dp))
                     }
                 }
@@ -341,7 +360,8 @@ fun AssetEditorDialog(
             folderId = "root"
             type = null
             tag = ""; tags.clear()
-        }
+        } else if (assetCreatedState == API_ERROR_FILE_TOO_BIG) fileError = Res.string.file_too_big_error
+        else if (assetCreatedState == API_ERROR_IMPORT_FAILED) fileError = Res.string.import_failed_error
     }
 
     //------------------------------- UI
@@ -401,11 +421,11 @@ fun AssetEditorDialog(
                         .wrapContentHeight(),
                     enabled = assetCreatedState != LOADING_STATE,
                     shape = MaterialTheme.shapes.extraLarge,
-                    textStyle = MaterialTheme.typography.labelSmall,
+                    textStyle = MaterialTheme.typography.labelLarge,
                     placeholder = {
                         Text(
                             text = stringResource(Res.string.asset_name_placeholder),
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelLarge
                         )
                     },
                     isError = errorName != null,
@@ -421,19 +441,21 @@ fun AssetEditorDialog(
 
                 //Pick Type
                 Dropdown(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     hint = stringResource(Res.string.pick_type),
                     options = types,
-                    onItemPicked = { type = types[it] }
+                    onItemPicked = { type = types[it] },
+                    enabled = assetCreatedState != LOADING_STATE
                 )
                 Spacer(Modifier.height(16.dp))
 
                 //Pick Folder
                 FoldersDropdown(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     hint = stringResource(Res.string.pick_folder),
                     folders = folders,
-                    onFolderPicked = { folderId = it }
+                    onFolderPicked = { folderId = it },
+                    enabled = assetCreatedState != LOADING_STATE
                 )
                 Spacer(Modifier.height(16.dp))
 
@@ -449,11 +471,11 @@ fun AssetEditorDialog(
                             .wrapContentHeight(),
                         enabled = assetCreatedState != LOADING_STATE,
                         shape = MaterialTheme.shapes.extraLarge,
-                        textStyle = MaterialTheme.typography.labelSmall,
+                        textStyle = MaterialTheme.typography.labelLarge,
                         placeholder = {
                             Text(
-                                text = stringResource(Res.string.folder_name_placeholder),
-                                style = MaterialTheme.typography.labelSmall
+                                text = stringResource(Res.string.tag_placeholder),
+                                style = MaterialTheme.typography.labelLarge
                             )
                         },
                         isError = errorTag != null,
@@ -463,7 +485,10 @@ fun AssetEditorDialog(
                     OutlinedIconButton(
                         onClick = {
                             if (tag == "") errorTag = Res.string.error_tag_required
-                            else tags.add(tag)
+                            else {
+                                tags.add(tag)
+                                tag = ""
+                            }
                         }
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = null)
@@ -481,6 +506,7 @@ fun AssetEditorDialog(
                             onClick = { tags.remove(it) },
                             label = { Text(it) }
                         )
+                        Spacer(Modifier.width(4.dp))
                     }
                 }
             }
@@ -503,7 +529,7 @@ fun AssetEditorDialog(
                                 name = name,
                                 tags = tags.apply {
                                     add("inspiration")
-                                    if(type == null) add("other") else add(type!!.lowercase())
+                                    if (type == null) add("other") else add(type!!.lowercase())
                                 }.toList(),
                                 folderId = folderId,
                                 assetFile = assetFile

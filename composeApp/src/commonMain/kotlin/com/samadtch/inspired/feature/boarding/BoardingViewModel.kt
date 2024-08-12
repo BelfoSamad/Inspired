@@ -54,12 +54,7 @@ class BoardingViewModel(
             try {
                 userRepository.authenticate(codeVerifier, code)
                 _loginState.emit(SUCCESS_STATE)
-            } //TODO: Properly handle returned errors
-            catch (e: AuthException) {
-                println("CREATE FOLDER - AUTH ERROR: " + e.message)
-                _loginState.emit(e.code)
-            } catch (e: DataException) {
-                println("CREATE FOLDER - DATA ERROR: " + e.message)
+            } catch (e: AuthException) {
                 _loginState.emit(e.code)
             }
         }

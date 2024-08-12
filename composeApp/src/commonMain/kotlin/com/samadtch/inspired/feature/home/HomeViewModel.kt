@@ -6,7 +6,15 @@ import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.Result
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.AuthException
+import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
 import com.samadtch.inspired.common.exceptions.DataException
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_AUTH
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NETWORK
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_NOT_FOUND
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_OTHER
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_RATE_LIMIT
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_REQUEST_OTHER
+import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_SERVER_OTHER
 import com.samadtch.inspired.data.repositories.AssetsRepository
 import com.samadtch.inspired.data.repositories.FoldersRepository
 import com.samadtch.inspired.data.repositories.UserRepository
@@ -17,10 +25,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import moe.tlaster.precompose.viewmodel.viewModel
 
 class HomeViewModel(
     private val userRepository: UserRepository,
@@ -31,24 +41,28 @@ class HomeViewModel(
     /* **************************************************************************
      * ************************************* Declarations
      */
-    val homeUiState: StateFlow<HomeUiState> = getAllItems().map {
-        when (it) {
-            Result.Loading -> HomeUiState.Loading
-            is Result.Error -> {
-                HomeUiState.Error(
-                    type = if (it.exception is DataException) "DATA" else "AUTH",
-                    code = if (it.exception is DataException) it.exception.code
-                    else (it.exception as AuthException).code
-                )
-            }
+    private val _refresh = MutableStateFlow(false)
+    private val refresh: StateFlow<Boolean> = _refresh.asStateFlow()
+    val homeUiState: StateFlow<HomeUiState> = combine(refresh, getAllItems()) { _, items -> items }
+        .map {
+            println("REFRESHED")
+            when (it) {
+                Result.Loading -> HomeUiState.Loading
+                is Result.Error -> {
+                    HomeUiState.Error(
+                        type = if (it.exception is DataException) "DATA" else "AUTH",
+                        code = if (it.exception is DataException) it.exception.code
+                        else (it.exception as AuthException).code
+                    )
+                }
 
-            is Result.Success -> HomeUiState.Success(it.data.first, it.data.second)
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = HomeUiState.Loading,
-    )
+                is Result.Success -> HomeUiState.Success(it.data.first, it.data.second)
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = HomeUiState.Loading,
+        )
 
     //Action States
     private val _deleteFolderState = MutableStateFlow<Int?>(null)
@@ -69,6 +83,11 @@ class HomeViewModel(
         }
     }
 
+    fun refresh() {
+        //TODO: Fix That
+        viewModelScope.launch { _refresh.emit(true) }
+    }
+
     fun deleteFolder(folderId: String) {
         viewModelScope.launch {
             _deleteFolderState.emit(LOADING_STATE)//Loading State
@@ -77,13 +96,15 @@ class HomeViewModel(
                     foldersRepository.deleteFolder(it, folderId)
                 }
                 _deleteFolderState.emit(SUCCESS_STATE)
-            } //TODO: Properly handle returned errors
-            catch (e: AuthException) {
-                println("CREATE FOLDER - AUTH ERROR: " + e.message)
-                _deleteFolderState.emit(e.code)
+            } catch (e: AuthException) {
+                //only if error is from server, keep logged-in and try again
+                if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _deleteFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                //else logout
+                else _deleteFolderState.emit(API_ERROR_AUTH)
             } catch (e: DataException) {
-                println("CREATE FOLDER - DATA ERROR: " + e.message)
-                _deleteFolderState.emit(e.code)
+                if (e.code in DataException.handleableErrors) _deleteFolderState.emit(e.code)
+                else _deleteFolderState.emit(API_ERROR_OTHER)
             }
         }
     }
@@ -96,13 +117,15 @@ class HomeViewModel(
                     foldersRepository.saveFolder(it, folder, parentId)
                 }
                 _saveFolderState.emit(SUCCESS_STATE)
-            } //TODO: Properly handle returned errors
-            catch (e: AuthException) {
-                println("SAVE FOLDER - AUTH ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+            } catch (e: AuthException) {
+                //only if error is from server, keep logged-in and try again
+                if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _saveFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                //else logout
+                else _saveFolderState.emit(API_ERROR_AUTH)
             } catch (e: DataException) {
-                println("SAVE FOLDER - DATA ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+                if (e.code in DataException.handleableErrors) _saveFolderState.emit(e.code)
+                else _saveFolderState.emit(API_ERROR_OTHER)
             }
         }
     }
@@ -115,13 +138,15 @@ class HomeViewModel(
                     assetsRepository.createAsset(it, asset)
                 }
                 _createAssetState.emit(SUCCESS_STATE)
-            } //TODO: Properly handle returned errors
-            catch (e: AuthException) {
-                println("SAVE ASSET - AUTH ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+            } catch (e: AuthException) {
+                //only if error is from server, keep logged-in and try again
+                if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _createAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                //else logout
+                else _createAssetState.emit(API_ERROR_AUTH)
             } catch (e: DataException) {
-                println("SAVE ASSET - DATA ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+                if (e.code in DataException.handleableErrors) _createAssetState.emit(e.code)
+                else _createAssetState.emit(API_ERROR_OTHER)
             }
         }
     }
@@ -134,14 +159,26 @@ class HomeViewModel(
                     assetsRepository.deleteAsset(it, assetId)
                 }
                 _deleteAssetState.emit(SUCCESS_STATE)
-            } //TODO: Properly handle returned errors
-            catch (e: AuthException) {
-                println("SAVE ASSET - AUTH ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+            } catch (e: AuthException) {
+                //only if error is from server, keep logged-in and try again
+                if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _deleteAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                //else logout
+                else _deleteAssetState.emit(API_ERROR_AUTH)
             } catch (e: DataException) {
-                println("SAVE ASSET - DATA ERROR: " + e.message)
-                _saveFolderState.emit(e.code)
+                if (e.code in DataException.handleableErrors) _deleteAssetState.emit(e.code)
+                else _deleteAssetState.emit(API_ERROR_OTHER)
             }
+        }
+    }
+
+    // reset all states since only one is active at a time
+    fun resetStates() {
+        viewModelScope.launch {
+            _saveFolderState.emit(null)
+            _deleteFolderState.emit(null)
+            _createAssetState.emit(null)
+            _deleteAssetState.emit(null)
         }
     }
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
@@ -36,18 +37,10 @@ import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKE
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_REQUEST_ERROR
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_REQUEST_ERROR_OTHER
 import com.samadtch.inspired.common.exceptions.AuthException.Companion.AUTH_TOKEN_SERVER_ERROR_OTHER
-import inspired.composeapp.generated.resources.Res
-import inspired.composeapp.generated.resources.authenticate
-import inspired.composeapp.generated.resources.boarding_descriptions
-import inspired.composeapp.generated.resources.boarding_titles
-import inspired.composeapp.generated.resources.error_auth_conflict
-import inspired.composeapp.generated.resources.error_auth_other
-import inspired.composeapp.generated.resources.error_auth_request
-import inspired.composeapp.generated.resources.error_auth_request_other
-import inspired.composeapp.generated.resources.error_auth_server
-import inspired.composeapp.generated.resources.next
+import inspired.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.flow.collectAsStateWithLifecycle
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -87,10 +80,8 @@ internal fun BoardingRoot(
     LaunchedEffect(uiState) {
         if (uiState != null) {
             println(uiState)
-            if (uiState?.isLoggedIn == true) {
-                println("GOING HOME")
-                goHome()
-            } else if (uiState?.isFirstOpen == false) goLast = true
+            if (uiState?.isLoggedIn == true) goHome()
+            else if (uiState?.isFirstOpen == false) goLast = true
             onSplashScreenDone()
         }
     }
@@ -143,8 +134,10 @@ fun BoardingScreen(
         Column(Modifier.weight(1f)) {
             Text(
                 modifier = Modifier.padding(top = 32.dp, start = 24.dp),
-                text = "M",
-                style = MaterialTheme.typography.displayMedium
+                text = stringResource(Res.string.app_name),
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontFamily = FontFamily(Font(Res.font.logo_font))
+                )
             )
 
             //Boarding Messages

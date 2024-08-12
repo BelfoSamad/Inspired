@@ -28,10 +28,8 @@ suspend fun <T> handleAuthError(scope: String, block: suspend () -> T): T {
     try {
         return block()
     } catch (e: IOException) {
-        println("IO: ${e.message}")
         throw DataException(API_ERROR_NETWORK)
     }  catch (e: ClientRequestException) {
-        println("Client: ${e.message}")
         when (e.response.status) {
             HttpStatusCode.BadRequest -> {
                 throw AuthException(AUTH_TOKEN_REQUEST_ERROR)
@@ -43,11 +41,9 @@ suspend fun <T> handleAuthError(scope: String, block: suspend () -> T): T {
             }
         }
     } catch (e: ServerResponseException) {
-        println("Server: ${e.message}")
         sendCrashlytics(Exception("$scope: ${e.message}"))
         throw AuthException(AUTH_TOKEN_SERVER_ERROR_OTHER, e.message)
     } catch (e: Exception) {
-        println("Other: ${e.message}")
         sendCrashlytics(Exception("$scope: ${e.message}"))
         throw AuthException(AUTH_TOKEN_ERROR_OTHER, e.message)
     }

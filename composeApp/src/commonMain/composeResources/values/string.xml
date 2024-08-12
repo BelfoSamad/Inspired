@@ -48,14 +48,21 @@
     <!-- Inputs -->
     <string name="folder_name_placeholder">Folder Name</string>
     <string name="asset_name_placeholder">Asset Name</string>
+    <string name="tag_placeholder">Add a Tag</string>
     <string name="pick_folder">Pick Folder</string>
     <string name="pick_type">Pick Inspiration Type</string>
     <string name="pick_image">Pick Image</string>
 
     <!-- Error Messages: TODO: Update Error Messages -->
+    <string name="data_error">Unfortunately, an Error seems to have happened</string>
+    <string name="empty_error">Nothing has been found</string>
     <string name="error_network">No Network</string>
+    <string name="error_auth">Problem with Authentication, Re-Login</string>
     <string name="error_rate_limit">Rate Limit Exceeded</string>
-    <string name="error_data_other">Data Error</string>
+    <string name="error_not_found">Error Not Found</string>
+    <string name="error_data_request">Error With Request</string>
+    <string name="error_data_server">Error With Data Server</string>
+    <string name="error_data_other">Data Error Other</string>
     <string name="error_auth_conflict">Authorization code or Refresh token seem to be invalid or already used!</string>
     <string name="error_auth_request">Invalid Authorization code or Refresh token</string>
     <string name="error_auth_request_other">Error in authentication request!</string>
@@ -65,4 +72,6 @@
     <string name="error_name_similar">Name seem to be unchanged</string>
     <string name="error_tag_required">Tag is required</string>
     <string name="error_file_required">Image is required</string>
+    <string name="file_too_big_error">File seem to be too big</string>
+    <string name="import_failed_error">An Error happened while improting</string>
 </resources>
