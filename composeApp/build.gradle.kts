@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import com.codingfeline.buildkonfig.compiler.FieldSpec
+import org.jetbrains.compose.internal.utils.getLocalProperty
 
 fun DependencyHandlerScope.kapt(dependencyProvider : Provider<MinimalExternalModuleDependency>){
     add("kapt", dependencyProvider.get())
@@ -24,12 +25,12 @@ buildkonfig {
 
     // default config is required
     defaultConfigs {
-        buildConfigField(FieldSpec.Type.STRING, "BASE_URL", project.properties["BASE_URL"].toString())
-        buildConfigField(FieldSpec.Type.STRING, "AUTH_URL", project.properties["AUTH_URL"].toString())
-        buildConfigField(FieldSpec.Type.STRING, "REDIRECT_URL", project.properties["REDIRECT_URL"].toString())
-        buildConfigField(FieldSpec.Type.STRING, "SCOPES", project.properties["SCOPES"].toString())
-        buildConfigField(FieldSpec.Type.STRING, "CLIENT_ID", project.properties["CLIENT_ID"].toString())
-        buildConfigField(FieldSpec.Type.STRING, "CLIENT_SECRET", project.properties["CLIENT_SECRET"].toString())
+        buildConfigField(FieldSpec.Type.STRING, "BASE_URL", getLocalProperty("BASE_URL").toString())
+        buildConfigField(FieldSpec.Type.STRING, "AUTH_URL", getLocalProperty("AUTH_URL").toString())
+        buildConfigField(FieldSpec.Type.STRING, "REDIRECT_URL", getLocalProperty("REDIRECT_URL").toString())
+        buildConfigField(FieldSpec.Type.STRING, "SCOPES", getLocalProperty("SCOPES").toString())
+        buildConfigField(FieldSpec.Type.STRING, "CLIENT_ID", getLocalProperty("CLIENT_ID").toString())
+        buildConfigField(FieldSpec.Type.STRING, "CLIENT_SECRET", getLocalProperty("CLIENT_SECRET").toString())
     }
 }
 
