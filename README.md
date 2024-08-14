@@ -1,9 +1,8 @@
 * Google Play Link: https://play.google.com/store/apps/details?id=com.samadtch.inspired
 * App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
 
-> [!WARNING]
-> If the app on Google Play isn't live yet. Check the APK on `composeApp/release` or check the video
-> presentation of the app.
+> [!TIP]
+> The app is available on Google Play, you can test it right now!
 
 > [!CAUTION]
 > If the Authentication process doesn't redirect you back to the app directly (Android 13+), make
