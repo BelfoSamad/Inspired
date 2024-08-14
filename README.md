@@ -1,5 +1,5 @@
-Google Play Link: https://play.google.com/store/apps/details?id=com.samadtch.inspired
-App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
+* Google Play Link: https://play.google.com/store/apps/details?id=com.samadtch.inspired
+* App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
 
 > [!WARNING]
 > If the app on Google Play isn't live yet. Check the APK on `composeApp/release` or check the video
@@ -9,6 +9,9 @@ App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
 > If the Authentication process doesn't redirect you back to the app directly (Android 13+), make
 > sure to add the link as verified in the App's settings. Automatic verification is being worked at
 > now.
+
+> [!CAUTION]
+> App is still in preview and Integration with Canva isn't valid yet untill app is fully tested which will be done as soon as possible.
 
 # Architecture
 
