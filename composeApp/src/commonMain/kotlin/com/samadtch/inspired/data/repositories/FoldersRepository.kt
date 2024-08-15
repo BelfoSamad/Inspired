@@ -11,6 +11,6 @@ interface FoldersRepository {
 
     suspend fun deleteFolder(token: String, fId: String)
 
-    suspend fun saveFolder(token: String, folder: Folder, parentId: String?)
+    suspend fun saveFolder(token: String, folder: Folder): Folder
 
 }

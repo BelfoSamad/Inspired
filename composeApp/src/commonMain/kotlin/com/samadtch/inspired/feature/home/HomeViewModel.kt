@@ -34,24 +34,26 @@ class HomeViewModel(
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
     //Action States
-    private val _deleteFolderState = MutableStateFlow<Int?>(null)
-    val deleteFolderState: StateFlow<Int?> = _deleteFolderState.asStateFlow()
-    private val _saveFolderState = MutableStateFlow<Int?>(null)
-    val saveFolderState: StateFlow<Int?> = _saveFolderState.asStateFlow()
-    private val _createAssetState = MutableStateFlow<Int?>(null)
-    val createAssetState: StateFlow<Int?> = _createAssetState.asStateFlow()
-    private val _deleteAssetState = MutableStateFlow<Int?>(null)
-    val deleteAssetState: StateFlow<Int?> = _deleteAssetState.asStateFlow()
+    private val _deleteFolderState = MutableStateFlow<Pair<Int?, String>?>(null)
+    val deleteFolderState: StateFlow<Pair<Int?, String>?> = _deleteFolderState.asStateFlow()
+    private val _saveFolderState = MutableStateFlow<Pair<Int?, Folder>?>(null)
+    val saveFolderState: StateFlow<Pair<Int?, Folder>?> = _saveFolderState.asStateFlow()
+    private val _createAssetState = MutableStateFlow<Pair<Int?, Asset>?>(null)
+    val createAssetState: StateFlow<Pair<Int?, Asset>?> = _createAssetState.asStateFlow()
+    private val _deleteAssetState = MutableStateFlow<Pair<Int?, String>?>(null)
+    val deleteAssetState: StateFlow<Pair<Int?, String>?> = _deleteAssetState.asStateFlow()
 
     /* **************************************************************************
      * ************************************* Init
      */
-    init { fetchAllItems() }
+    init {
+        fetchAllItems()
+    }
 
     /* **************************************************************************
      * ************************************* Functions
      */
-    fun fetchAllItems() {
+    private fun fetchAllItems() {
         viewModelScope.launch {
             userRepository.performActionWithFreshToken { token ->
                 foldersRepository.getAllItems(token).collect {
@@ -76,84 +78,85 @@ class HomeViewModel(
 
     fun deleteFolder(folderId: String) {
         viewModelScope.launch {
-            _deleteFolderState.emit(LOADING_STATE)//Loading State
+            _deleteFolderState.emit(LOADING_STATE to folderId)//Loading State
             try {
                 userRepository.performActionWithFreshToken {
                     foldersRepository.deleteFolder(it, folderId)
                 }
-                _deleteFolderState.emit(SUCCESS_STATE)
+                _deleteFolderState.emit(SUCCESS_STATE to folderId)
             } catch (e: AuthException) {
                 //only if error is from server, keep logged-in and try again
                 if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
-                    _deleteFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _deleteFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER to folderId)
                 //else logout
-                else _deleteFolderState.emit(API_ERROR_AUTH)
+                else _deleteFolderState.emit(API_ERROR_AUTH to folderId)
             } catch (e: DataException) {
-                if (e.code in DataException.handleableErrors) _deleteFolderState.emit(e.code)
-                else _deleteFolderState.emit(API_ERROR_OTHER)
+                if (e.code in DataException.handleableErrors) _deleteFolderState.emit(e.code to folderId)
+                else _deleteFolderState.emit(API_ERROR_OTHER to folderId)
             }
         }
     }
 
-    fun saveFolder(folder: Folder, parentId: String?) {
+    fun saveFolder(folder: Folder) {
         viewModelScope.launch {
-            _saveFolderState.emit(LOADING_STATE)//Loading State
+            _saveFolderState.emit(LOADING_STATE to folder)//Loading State
             try {
                 userRepository.performActionWithFreshToken {
-                    foldersRepository.saveFolder(it, folder, parentId)
+                    _saveFolderState.emit(SUCCESS_STATE to foldersRepository.saveFolder(it, folder))
                 }
-                _saveFolderState.emit(SUCCESS_STATE)
             } catch (e: AuthException) {
                 //only if error is from server, keep logged-in and try again
                 if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
-                    _saveFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _saveFolderState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER to folder)
                 //else logout
-                else _saveFolderState.emit(API_ERROR_AUTH)
+                else _saveFolderState.emit(API_ERROR_AUTH to folder)
             } catch (e: DataException) {
-                if (e.code in DataException.handleableErrors) _saveFolderState.emit(e.code)
-                else _saveFolderState.emit(API_ERROR_OTHER)
+                if (e.code in DataException.handleableErrors) _saveFolderState.emit(e.code to folder)
+                else _saveFolderState.emit(API_ERROR_OTHER to folder)
             }
         }
     }
 
     fun createAsset(asset: Asset, assetFile: AssetFile) {
         viewModelScope.launch {
-            _createAssetState.emit(LOADING_STATE)//Loading State
+            _createAssetState.emit(LOADING_STATE to asset)//Loading State
             try {
                 userRepository.performActionWithFreshToken {
-                    assetsRepository.createAsset(it, asset, assetFile)
+                    _createAssetState.emit(
+                        SUCCESS_STATE to
+                                assetsRepository.createAsset(it, asset, assetFile)
+                    )
                 }
-                _createAssetState.emit(SUCCESS_STATE)
             } catch (e: AuthException) {
                 //only if error is from server, keep logged-in and try again
                 if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
-                    _createAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _createAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER to asset)
                 //else logout
-                else _createAssetState.emit(API_ERROR_AUTH)
+                else _createAssetState.emit(API_ERROR_AUTH to asset)
             } catch (e: DataException) {
-                if (e.code in DataException.handleableErrors) _createAssetState.emit(e.code)
-                else _createAssetState.emit(API_ERROR_OTHER)
+                if (e.code in DataException.handleableErrors) _createAssetState.emit(e.code to asset)
+                else _createAssetState.emit(API_ERROR_OTHER to asset)
             }
         }
     }
 
     fun deleteAsset(assetId: String) {
         viewModelScope.launch {
-            _deleteAssetState.emit(LOADING_STATE)//Loading State
+            _deleteAssetState.emit(LOADING_STATE to assetId)//Loading State
             try {
                 userRepository.performActionWithFreshToken {
                     assetsRepository.deleteAsset(it, assetId)
                 }
-                _deleteAssetState.emit(SUCCESS_STATE)
+                _deleteAssetState.emit(SUCCESS_STATE to assetId)
             } catch (e: AuthException) {
                 //only if error is from server, keep logged-in and try again
                 if (e.code == AUTH_TOKEN_SERVER_ERROR_OTHER)
-                    _deleteAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER)
+                    _deleteAssetState.emit(AUTH_TOKEN_SERVER_ERROR_OTHER to assetId)
                 //else logout
-                else _deleteAssetState.emit(API_ERROR_AUTH)
+                else _deleteAssetState.emit(API_ERROR_AUTH to assetId)
             } catch (e: DataException) {
-                if (e.code in DataException.handleableErrors) _deleteAssetState.emit(e.code)
-                else _deleteAssetState.emit(API_ERROR_OTHER)
+                if (e.code in DataException.handleableErrors) _deleteAssetState.emit(e.code to assetId)
+                else _deleteAssetState.emit(API_ERROR_OTHER to assetId)
             }
         }
     }

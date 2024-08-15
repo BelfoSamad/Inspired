@@ -3,6 +3,7 @@ package com.samadtch.inspired.data.repositories.impl
 import androidx.compose.ui.graphics.ImageBitmap
 import com.samadtch.inspired.common.di.Dispatcher
 import com.samadtch.inspired.data.datasources.remote.AssetsRemoteDataSource
+import com.samadtch.inspired.data.datasources.remote.dto.asExternalModel
 import com.samadtch.inspired.data.repositories.AssetsRepository
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.AssetFile
@@ -25,7 +26,7 @@ class AssetsRepositoryImpl(
             token,
             asset,
             assetFile.copy(bitmap = imageBitmap) //replace bitmap
-        )
+        )!!.asExternalModel()
     }
 
     override suspend fun deleteAsset(token: String, assetId: String) = withContext(dispatcher.io) {

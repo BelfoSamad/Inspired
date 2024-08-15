@@ -38,7 +38,6 @@ fun Nav(
     }
 
     LaunchedEffect(loggedOut) {
-        println(loggedOut)
         if (loggedOut != null) navController.navigate(
             BOARDING_ROUTE,
             navOptions {

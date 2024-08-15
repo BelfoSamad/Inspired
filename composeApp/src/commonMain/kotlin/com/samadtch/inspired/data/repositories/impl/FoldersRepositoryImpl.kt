@@ -32,7 +32,7 @@ class FoldersRepositoryImpl(
             else null
             when (item.type) {
                 "folder" -> {
-                    val folder = item.folder!!.asExternalModel()
+                    val folder = item.folder!!.asExternalModel().copy(parentId = folderId)
                     folders.add(folder.copy(children = childItems?.first))
                     if (childItems != null) assets.addAll(childItems.second)
                 }
@@ -54,9 +54,10 @@ class FoldersRepositoryImpl(
         foldersRemoteDataSource.deleteFolder(token, fId)
     }
 
-    override suspend fun saveFolder(token: String, folder: Folder, parentId: String?) =
-        withContext(dispatcher.io) {
-            if (parentId != null) foldersRemoteDataSource.createFolder(token, folder, parentId)
-            else foldersRemoteDataSource.updateFolder(token, folder)
-        }
+    override suspend fun saveFolder(token: String, folder: Folder) = withContext(dispatcher.io) {
+        if (folder.folderId == null) foldersRemoteDataSource.createFolder(token, folder)
+            .asExternalModel().copy(parentId = folder.parentId)
+        else foldersRemoteDataSource.updateFolder(token, folder)
+            .asExternalModel().copy(parentId = folder.parentId)
+    }
 }

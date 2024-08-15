@@ -73,6 +73,7 @@ import inspired.composeapp.generated.resources.tag_placeholder
 import inspired.composeapp.generated.resources.types
 import inspired.composeapp.generated.resources.update
 import inspired.composeapp.generated.resources.update_folder
+import kotlinx.datetime.Clock
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import org.jetbrains.compose.resources.Font
@@ -169,7 +170,7 @@ fun FolderDialog(
 fun FolderEditorDialog(
     folder: Folder? = null,
     parentId: String? = null,
-    onFolderUpdate: (Folder, String?) -> Unit,
+    onFolderUpdate: (Folder) -> Unit,
     folderSaveState: Int?,
     onDismiss: () -> Unit
 ) {
@@ -244,10 +245,9 @@ fun FolderEditorDialog(
                         if (name == "") error = Res.string.error_name_required
                         else if (folder != null && name == folder.name) error =
                             Res.string.error_name_similar
-                        else {
-                            if (folder == null) onFolderUpdate(Folder(name = name), parentId!!)
-                            else onFolderUpdate(folder.copy(name = name), null)
-                        }
+                        else if (folder == null) //create
+                            onFolderUpdate(Folder(name = name, parentId = parentId))
+                        else onFolderUpdate(folder.copy(name = name)) //update
                     },
                 ) {
                     //Loading State
@@ -568,7 +568,8 @@ fun AssetEditorDialog(
                                     add("inspiration")
                                     if (type == null) add("other") else add(type!!.lowercase())
                                 }.toList(),
-                                folderId = folderId
+                                folderId = folderId,
+                                createdAt = Clock.System.now()
                             ),
                             assetFile
                         )

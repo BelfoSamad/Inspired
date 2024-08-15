@@ -105,8 +105,8 @@ internal fun HomeRoute(
     val createAssetState by viewModel.createAssetState.collectAsStateWithLifecycle()
     val deleteAssetState by viewModel.deleteAssetState.collectAsStateWithLifecycle()
     val actionStates = listOf(
-        deleteFolderState, saveFolderState,
-        createAssetState, deleteAssetState
+        deleteFolderState?.first, saveFolderState?.first,
+        createAssetState?.first, deleteAssetState?.first
     )
 
     //Data
@@ -145,20 +145,19 @@ internal fun HomeRoute(
             API_ERROR_SERVER_OTHER -> onShowSnackbar(false, errorDataServer, null)
             else -> onShowSnackbar(false, errorDataOther, null)
         }
-        else if (actionCode == SUCCESS_STATE) viewModel.fetchAllItems() //refetch items after action done
     }
 
     //------------------------------- Dialogs
     //Folder Editor
-    var folderAddDialog by remember { mutableStateOf<String?>(null) }
+    var parentIdFolderDialog by remember { mutableStateOf<String?>(null) }
     var folderUpdateDialog by remember { mutableStateOf<Folder?>(null) }
-    if (folderAddDialog != null || folderUpdateDialog != null) FolderEditorDialog(
+    if (parentIdFolderDialog != null || folderUpdateDialog != null) FolderEditorDialog(
         folder = folderUpdateDialog,
-        parentId = folderAddDialog,
+        parentId = parentIdFolderDialog,
         onFolderUpdate = viewModel::saveFolder,
-        folderSaveState = saveFolderState,
+        folderSaveState = saveFolderState?.first,
         onDismiss = {
-            folderAddDialog = null
+            parentIdFolderDialog = null
             folderUpdateDialog = null
             viewModel.resetStates()
         }
@@ -173,7 +172,7 @@ internal fun HomeRoute(
             folderUpdateDialog = it
         },
         onFolderDelete = viewModel::deleteFolder,
-        folderDeleteState = deleteFolderState,
+        folderDeleteState = deleteFolderState?.first,
         onDismiss = {
             folderDialog = null
             viewModel.resetStates()
@@ -185,7 +184,7 @@ internal fun HomeRoute(
     if (assetDialog != null) AssetDialog(
         asset = assetDialog!!,
         onAssetDelete = viewModel::deleteAsset,
-        assetDeleteState = deleteAssetState,
+        assetDeleteState = deleteAssetState?.first,
         onDismiss = {
             assetDialog = null
             viewModel.resetStates()
@@ -199,7 +198,7 @@ internal fun HomeRoute(
         folders = (homeUiState as? HomeViewModel.HomeUiState.Success)?.folders ?: listOf(),
         onFilePickClick = onFilePick,
         onAssetAdd = viewModel::createAsset,
-        assetCreatedState = createAssetState,
+        assetCreatedState = createAssetState?.first,
         onDismiss = {
             receivedAssetFile = null
             showAddAssetDialog = false
@@ -217,7 +216,11 @@ internal fun HomeRoute(
         onAssetClick = { assetDialog = it },
         onAssetAddClick = { showAddAssetDialog = true },
         onFolderClick = { folderDialog = it },
-        onFolderAddClick = { folderAddDialog = it }
+        onFolderAddClick = { parentIdFolderDialog = it },
+        createAssetState = createAssetState,
+        deleteAssetState = deleteAssetState,
+        saveFolderState = saveFolderState,
+        deleteFolderState = deleteFolderState
     )
 }
 
@@ -232,6 +235,10 @@ fun HomeScreen(
     onAssetAddClick: () -> Unit,
     onFolderClick: (Folder) -> Unit,
     onFolderAddClick: (String) -> Unit,
+    createAssetState: Pair<Int?, Asset>?,
+    deleteAssetState: Pair<Int?, String>?,
+    saveFolderState: Pair<Int?, Folder>?,
+    deleteFolderState: Pair<Int?, String>?
 ) {
     //------------------------------- Declarations
     var isLoading by remember { mutableStateOf(true) }
@@ -334,7 +341,9 @@ fun HomeScreen(
             errorCaught = errorCaught,
             assets = assets,
             onAssetClick = onAssetClick,
-            onAssetAddClick = onAssetAddClick
+            onAssetAddClick = onAssetAddClick,
+            createAssetState = createAssetState,
+            deleteAssetState = deleteAssetState
         )
         Spacer(Modifier.height(16.dp))
 
@@ -345,6 +354,8 @@ fun HomeScreen(
             folders = folders,
             onFolderClick = onFolderClick,
             onFolderAddClick = onFolderAddClick,
+            saveFolderState = saveFolderState,
+            deleteFolderState = deleteFolderState
         )
     }
 }
@@ -357,39 +368,46 @@ fun Inspirations(
     assets: List<Asset>,
     onAssetClick: (Asset) -> Unit,
     onAssetAddClick: () -> Unit,
+    createAssetState: Pair<Int?, Asset>?,
+    deleteAssetState: Pair<Int?, String>?
 ) {
     //------------------------------- Declarations
+    val receivedAssets = remember { mutableStateListOf<Asset>() }
     var filterBy by remember { mutableStateOf("All") }
     val filteredAssets = remember { mutableStateListOf<Asset>() }
 
     //------------------------------- Side Effects
-    //Init Filtered Assets
+    //Init Assets: put assets in mutable list for edits (adding, removing)
     LaunchedEffect(assets) {
-        filteredAssets.addAll(
-            when (filterBy) {
-                "All" -> assets
-                "Palette" -> assets.filter { it.tags.contains("palette") }
-                "Composition" -> assets.filter { it.tags.contains("composition") }
-                "Typography" -> assets.filter { it.tags.contains("typography") }
-                "Pattern" -> assets.filter { it.tags.contains("pattern") }
-                else -> assets.filter { it.tags.contains("other") }
-            }
-        )
+        receivedAssets.addAll(assets)
     }
 
-    LaunchedEffect(filterBy) {
+    //Handle Filtering
+    LaunchedEffect(filterBy, receivedAssets.size) {
         //Update Filtered List
         filteredAssets.clear()
         filteredAssets.addAll(
             when (filterBy) {
-                "All" -> assets
-                "Palette" -> assets.filter { it.tags.contains("palette") }
-                "Composition" -> assets.filter { it.tags.contains("composition") }
-                "Typography" -> assets.filter { it.tags.contains("typography") }
-                "Pattern" -> assets.filter { it.tags.contains("pattern") }
-                else -> assets.filter { it.tags.contains("other") }
+                "All" -> receivedAssets
+                "Palette" -> receivedAssets.filter { it.tags.contains("palette") }
+                "Composition" -> receivedAssets.filter { it.tags.contains("composition") }
+                "Typography" -> receivedAssets.filter { it.tags.contains("typography") }
+                "Pattern" -> receivedAssets.filter { it.tags.contains("pattern") }
+                else -> receivedAssets.filter { it.tags.contains("other") }
             }
         )
+    }
+
+    //Asset Actions
+    LaunchedEffect(createAssetState) {
+        if (createAssetState?.first == SUCCESS_STATE) {
+            receivedAssets.add(createAssetState.second)
+        }
+    }
+    LaunchedEffect(deleteAssetState) {
+        if (deleteAssetState?.first == SUCCESS_STATE) {
+            receivedAssets.removeAll { it.assetId == deleteAssetState.second }
+        }
     }
 
     //------------------------------- UI
@@ -411,50 +429,45 @@ fun Inspirations(
         Spacer(Modifier.height(16.dp))
 
         //Inspirations (Assets)
-        if (loading) {
-            InspirationLoader()
-        } else if (errorCaught) {
-            ErrorMessage(Res.string.data_error)
-        } else if (filteredAssets.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxWidth().height(144.dp).border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.large
-                ).clickable { onAssetAddClick() }, contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    modifier = Modifier.size(48.dp),
-                    imageVector = Icons.Default.Add,
-                    tint = MaterialTheme.colorScheme.secondaryContainer,
-                    contentDescription = null
-                )
+        if (loading) InspirationLoader()
+        else if (errorCaught) ErrorMessage(Res.string.data_error)
+        else if (filteredAssets.isEmpty()) Box(
+            modifier = Modifier.fillMaxWidth().height(144.dp).border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = MaterialTheme.shapes.large
+            ).clickable { onAssetAddClick() }, contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(48.dp),
+                imageVector = Icons.Default.Add,
+                tint = MaterialTheme.colorScheme.secondaryContainer,
+                contentDescription = null
+            )
+        }
+        else LazyRow {
+            items(filteredAssets) {
+                InspirationItem(it, onAssetClick)
+                Spacer(modifier = Modifier.width(4.dp))
             }
-        } else {
-            LazyRow {
-                items(filteredAssets) {
-                    InspirationItem(it, onAssetClick)
-                    Spacer(modifier = Modifier.width(4.dp))
-                }
-                item {
-                    Column(Modifier.width(96.dp)) {
-                        Box(
-                            modifier = Modifier.width(96.dp).height(144.dp).border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                shape = MaterialTheme.shapes.large
-                            ).clickable { onAssetAddClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Add, null)
-                        }
-                        Text(
-                            modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
-                            text = stringResource(Res.string.add_asset),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelLarge
-                        )
+            item {
+                Column(Modifier.width(96.dp)) {
+                    Box(
+                        modifier = Modifier.width(96.dp).height(144.dp).border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.large
+                        ).clickable { onAssetAddClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Add, null)
                     }
+                    Text(
+                        modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                        text = stringResource(Res.string.add_asset),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -477,7 +490,8 @@ fun InspirationLoader() {
 
 @Composable
 fun InspirationItem(
-    asset: Asset, onAssetClick: (Asset) -> Unit
+    asset: Asset,
+    onAssetClick: (Asset) -> Unit
 ) {
     Column(Modifier.width(96.dp)) {
         Card(
@@ -513,7 +527,29 @@ fun Folders(
     folders: List<Folder>,
     onFolderClick: (Folder) -> Unit,
     onFolderAddClick: (String) -> Unit,
+    saveFolderState: Pair<Int?, Folder>?,
+    deleteFolderState: Pair<Int?, String>?
 ) {
+    //------------------------------- Declarations
+    val receivedFolders = remember { mutableStateListOf<Folder>() }
+
+    //------------------------------- LaunchedEffect
+    LaunchedEffect(folders) {
+        receivedFolders.clear()
+        receivedFolders.addAll(folders)
+    }
+    LaunchedEffect(deleteFolderState) {
+        if (deleteFolderState?.first == SUCCESS_STATE && receivedFolders.firstOrNull { it.folderId == deleteFolderState.second } != null)
+            receivedFolders.removeAll { it.folderId == deleteFolderState.second }
+    }
+    LaunchedEffect(saveFolderState) {
+        if (saveFolderState?.first == SUCCESS_STATE && saveFolderState.second.parentId == "root") {
+            //if already exists, it is updated -> remove then re-add
+            receivedFolders.removeAll { it.folderId == saveFolderState.second.folderId }
+            receivedFolders.add(saveFolderState.second)
+        }
+    }
+
     //------------------------------- UI
     Column(Modifier.fillMaxWidth()) {
         //Top Section
@@ -533,22 +569,20 @@ fun Folders(
             }
         }
 
-        if (loading) {
-            FolderLoader()
-        } else if (errorCaught || folders.isEmpty()) {
-            ErrorMessage(
-                if (folders.isEmpty()) Res.string.empty_error
-                else Res.string.data_error
+        if (loading) FolderLoader()
+        else if (errorCaught || receivedFolders.isEmpty()) ErrorMessage(
+            if (folders.isEmpty()) Res.string.empty_error
+            else Res.string.data_error
+        )
+        else receivedFolders.forEach {
+            FolderItem(
+                folder = it,
+                onFolderClick = onFolderClick,
+                onFolderAddClick = onFolderAddClick,
+                saveFolderState = saveFolderState,
+                deleteFolderState = deleteFolderState
             )
-        } else {
-            folders.forEach {
-                FolderItem(
-                    folder = it,
-                    onFolderClick = onFolderClick,
-                    onFolderAddClick = onFolderAddClick
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
+            Spacer(modifier = Modifier.width(4.dp))
         }
     }
 }
@@ -564,11 +598,35 @@ fun FolderLoader() {
 fun FolderItem(
     folder: Folder,
     onFolderClick: (Folder) -> Unit,
-    onFolderAddClick: (String) -> Unit
+    onFolderAddClick: (String) -> Unit,
+    saveFolderState: Pair<Int?, Folder>?,
+    deleteFolderState: Pair<Int?, String>?
 ) {
+    //------------------------------- Declarations
+    val childrenFolders = remember { mutableStateListOf<Folder>() }
+
+    //------------------------------- LaunchedEffect
+    LaunchedEffect(folder) {
+        childrenFolders.clear()
+        childrenFolders.addAll(folder.children ?: listOf())
+    }
+    LaunchedEffect(deleteFolderState) {
+        if (deleteFolderState?.first == SUCCESS_STATE && childrenFolders.firstOrNull { it.folderId == deleteFolderState.second } != null)
+            childrenFolders.removeAll { it.folderId == deleteFolderState.second }
+    }
+    LaunchedEffect(saveFolderState) {
+        if (saveFolderState?.first == SUCCESS_STATE && saveFolderState.second.parentId == folder.folderId) {
+            //if already exists, it is updated -> remove then re-add
+            childrenFolders.removeAll { it.folderId == saveFolderState.second.folderId }
+            childrenFolders.add(saveFolderState.second)
+        }
+    }
+
+    //------------------------------- UI
     Column {
         Row(
-            modifier = Modifier.clickable { onFolderClick(folder) }.fillMaxWidth(),
+            modifier = Modifier.clickable { onFolderClick(folder.copy(children = childrenFolders)) }
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -586,9 +644,9 @@ fun FolderItem(
                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
             }
         }
-        folder.children?.forEach {
+        childrenFolders.forEach {
             Column(Modifier.padding(start = 24.dp)) {
-                FolderItem(it, onFolderClick, onFolderAddClick)
+                FolderItem(it, onFolderClick, onFolderAddClick, saveFolderState, deleteFolderState)
                 Spacer(modifier = Modifier.width(4.dp))
             }
         }

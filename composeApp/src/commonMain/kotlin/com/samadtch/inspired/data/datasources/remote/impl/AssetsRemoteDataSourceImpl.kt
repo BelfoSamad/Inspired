@@ -5,7 +5,9 @@ import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_IMPORT_FAILED
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.AssetsRemoteDataSource
+import com.samadtch.inspired.data.datasources.remote.dto.AssetDTO
 import com.samadtch.inspired.data.datasources.remote.dto.AssetInput
+import com.samadtch.inspired.data.datasources.remote.dto.AssetResponse
 import com.samadtch.inspired.data.datasources.remote.dto.AssetUploadJobDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderMove
 import com.samadtch.inspired.domain.models.Asset
@@ -33,8 +35,8 @@ class AssetsRemoteDataSourceImpl(
 ) : AssetsRemoteDataSource {
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun createAsset(token: String, asset: Asset, assetFile: AssetFile) {
-        handleDataError("createAsset") {
+    override suspend fun createAsset(token: String, asset: Asset, assetFile: AssetFile): AssetDTO? {
+        return handleDataError("createAsset") {
             //Upload File
             var assetUploadJob: AssetUploadJobDTO = client.post("asset-uploads") {
                 contentType(ContentType.Application.OctetStream)
@@ -46,20 +48,28 @@ class AssetsRemoteDataSourceImpl(
                 setBody(convertBitmapToByteArray(assetFile.bitmap))
             }.body<AssetUploadJobDTO>()
 
-            while (true) {
+            //Variables
+            var newAsset: AssetDTO? = null
+            var uploading = true
+
+            //Update Asset & move to appropriate folder
+            while (uploading) {
                 when (assetUploadJob.job.status) {
                     "in_progress" -> {
                         delay(2000)
                         assetUploadJob = client.get("asset-uploads/${assetUploadJob.job.id}") {
                             bearerAuth(token)
                         }.body()
+
+                        //still uploading
+                        uploading = true
                     }
 
                     "success" -> {
                         val createdAsset = assetUploadJob.job.asset!!
 
                         //Update Asset (Add Tags)
-                        client.patch("assets/${createdAsset.id}") {
+                        newAsset = client.patch("assets/${createdAsset.id}") {
                             contentType(ContentType.Application.Json)
                             bearerAuth(token)
                             setBody(
@@ -68,21 +78,24 @@ class AssetsRemoteDataSourceImpl(
                                     tags = asset.tags
                                 )
                             )
-                        }
+                        }.body<AssetResponse>().asset
 
                         //Move Asset to Folder
-                        client.post("folders/move") {
-                            contentType(ContentType.Application.Json)
-                            bearerAuth(token)
-                            setBody(
-                                FolderMove(
-                                    itemId = assetUploadJob.job.asset!!.id,
-                                    from = "root",
-                                    to = asset.folderId!!
+                        if (asset.folderId!! != "root")
+                            client.post("folders/move") {
+                                contentType(ContentType.Application.Json)
+                                bearerAuth(token)
+                                setBody(
+                                    FolderMove(
+                                        itemId = assetUploadJob.job.asset!!.id,
+                                        from = "root",
+                                        to = asset.folderId
+                                    )
                                 )
-                            )
-                        }
-                        break
+                            }
+
+                        //uploaded!
+                        uploading = false
                     }
 
                     "failed" -> {
@@ -92,6 +105,7 @@ class AssetsRemoteDataSourceImpl(
                     }
                 }
             }
+            newAsset
         }
     }
 

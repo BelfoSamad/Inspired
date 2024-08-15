@@ -31,6 +31,11 @@ data class AssetInput(
 )
 
 @Serializable
+data class AssetResponse(
+    val asset: AssetDTO
+)
+
+@Serializable
 data class AssetDTO(
     val id: String,
     val name: String,

@@ -2,9 +2,11 @@ package com.samadtch.inspired.data.datasources.remote.impl
 
 import com.samadtch.inspired.common.exceptions.handleDataError
 import com.samadtch.inspired.data.datasources.remote.FoldersRemoteDataSource
+import com.samadtch.inspired.data.datasources.remote.dto.FolderDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderInput
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemDTO
 import com.samadtch.inspired.data.datasources.remote.dto.FolderItemsDTO
+import com.samadtch.inspired.data.datasources.remote.dto.FolderResponse
 import com.samadtch.inspired.domain.models.Folder
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -48,7 +50,7 @@ class FoldersRemoteDataSourceImpl(
         }
     }
 
-    override suspend fun createFolder(token: String, folder: Folder, parentId: String) {
+    override suspend fun createFolder(token: String, folder: Folder): FolderDTO {
         return handleDataError("createFolder") {
             client.post("folders") {
                 contentType(ContentType.Application.Json)
@@ -56,14 +58,14 @@ class FoldersRemoteDataSourceImpl(
                 setBody(
                     FolderInput(
                         name = folder.name,
-                        parentFolderId = parentId
+                        parentFolderId = folder.parentId ?: "root"
                     )
                 )
-            }
+            }.body<FolderResponse>().folder
         }
     }
 
-    override suspend fun updateFolder(token: String, folder: Folder) {
+    override suspend fun updateFolder(token: String, folder: Folder): FolderDTO {
         return handleDataError("updateFolder") {
             client.patch("folders/${folder.folderId}") {
                 contentType(ContentType.Application.Json)
@@ -71,7 +73,7 @@ class FoldersRemoteDataSourceImpl(
                 setBody(
                     FolderInput(name = folder.name)
                 )
-            }
+            }.body<FolderResponse>().folder
         }
     }
 }

@@ -23,6 +23,11 @@ data class FolderMove(
 )
 
 @Serializable
+data class FolderResponse(
+    val folder: FolderDTO
+)
+
+@Serializable
 data class FolderDTO(
     val id: String,
     val name: String,
