@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.UploadFile
@@ -41,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,7 @@ import com.samadtch.inspired.common.LOADING_STATE
 import com.samadtch.inspired.common.SUCCESS_STATE
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_FILE_TOO_BIG
 import com.samadtch.inspired.common.exceptions.DataException.Companion.API_ERROR_IMPORT_FAILED
+import com.samadtch.inspired.common.exceptions.sendCrashlytics
 import com.samadtch.inspired.domain.models.Asset
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.models.Folder
@@ -73,6 +77,8 @@ import inspired.composeapp.generated.resources.tag_placeholder
 import inspired.composeapp.generated.resources.types
 import inspired.composeapp.generated.resources.update
 import inspired.composeapp.generated.resources.update_folder
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.datetime.Clock
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
@@ -292,9 +298,27 @@ fun AssetDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    tint = MaterialTheme.colorScheme.secondaryContainer,
-                    imageVector = Icons.Default.Inventory2,
+                KamelImage(
+                    modifier = Modifier.size(64.dp).clip(MaterialTheme.shapes.large),
+                    onLoading = {
+                        Icon(
+                            imageVector = Icons.Filled.Downloading,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    },
+                    onFailure = {
+                        sendCrashlytics(
+                            Exception("Thumbnail: ${it.message}"),
+                        )
+                        Icon(
+                            tint = MaterialTheme.colorScheme.secondaryContainer,
+                            imageVector = Icons.Default.Inventory2,
+                            contentDescription = null
+                        )
+                    },
+                    resource = asyncPainterResource(data = asset.thumbnail?.url ?: ""),
+                    contentScale = ContentScale.Crop,
                     contentDescription = null
                 )
                 Spacer(Modifier.height(4.dp))

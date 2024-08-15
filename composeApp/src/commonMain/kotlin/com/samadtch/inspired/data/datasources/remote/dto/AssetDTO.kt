@@ -43,12 +43,21 @@ data class AssetDTO(
     @SerialName("created_at")
     val createdAt: Int,
     @SerialName("updated_at")
-    val updatedAt: Int
+    val updatedAt: Int,
+    val thumbnail: Thumbnail? = null
+)
+
+@Serializable
+data class Thumbnail(
+    val width: Int,
+    val height: Int,
+    val url: String
 )
 
 fun AssetDTO.asExternalModel() = Asset(
     assetId = id,
     name = name,
     tags = tags,
+    thumbnail = thumbnail,
     createdAt = Instant.fromEpochSeconds(createdAt.toLong())
 )

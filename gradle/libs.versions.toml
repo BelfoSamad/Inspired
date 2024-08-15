@@ -20,11 +20,10 @@ ktor = "2.3.11"
 firebase-bom = "33.1.2"
 review = "2.0.1"
 buildConfig = "0.15.1"
-precompose = "1.6.1"
 hilt = "2.51"
 hilt-tools = "1.2.0"
 palette = "1.0.0"
-auth = "0.11.1"
+kamel = "0.9.1"
 security = "1.1.0-alpha06"
 browser = "1.8.0"
 androidx-navigation = "2.7.0-alpha07"
@@ -71,6 +70,7 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-ext" }
 
 # Others
+kamel = { module = "media.kamel:kamel-image", version.ref = "kamel" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime-ktx" }
 datastore = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
 review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "review" }

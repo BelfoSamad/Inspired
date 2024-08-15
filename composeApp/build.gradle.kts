@@ -99,6 +99,7 @@ kotlin {
             //Others
             implementation(libs.kotlinx.datetime)//DateTime
             implementation(libs.datastore)//DataStore
+            implementation(libs.kamel)
         }
     }
 }
