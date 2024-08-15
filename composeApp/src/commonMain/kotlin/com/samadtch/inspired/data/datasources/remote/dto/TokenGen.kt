@@ -13,5 +13,5 @@ data class TokenGenOutput(
     val tokenType: String = "Bearer",
     @SerialName("expires_in")
     val expiresIn: Int,
-    val scope: String,
+    val scope: String? = null,
 )
