@@ -32,6 +32,7 @@
 
                 <data
                     android:host="inspired.samadtch.com"
+                    android:pathPrefix="/oauth_redirect"
                     android:scheme="https" />
             </intent-filter>
         </activity>
