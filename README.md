@@ -1,14 +1,8 @@
-Google Play Link: https://play.google.com/store/apps/details?id=com.samadtch.inspired
-App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
-
-> [!WARNING]
-> If the app on Google Play isn't live yet. Check the APK on `composeApp/release` or check the video
-> presentation of the app.
+* Google Play Link: https://play.google.com/store/apps/details?id=com.samadtch.inspired
+* App Video Presentation: https://www.youtube.com/watch?v=kjNMkMWH_wc
 
 > [!CAUTION]
-> If the Authentication process doesn't redirect you back to the app directly (Android 13+), make
-> sure to add the link as verified in the App's settings. Automatic verification is being worked at
-> now.
+> App is still in preview and Integration with Canva isn't valid yet untill app is fully tested which will be done as soon as possible.
 
 # Architecture
 
@@ -45,11 +39,11 @@ properly tested, here's a list of functionalities that could've been done better
   Creating a folder or an asset), the app refreshes the whole page instead of just updating the
   state of the affected part. This was the quickest way possible to update state after an action, a
   more sophisticated way will be added as soon as possible.
-- For Authentication, due to the requirement for a valid redirect url. Starting of Android 13, the
+- ~~For Authentication, due to the requirement for a valid redirect url. Starting of Android 13, the
   domain name has to be verified to be able to apply Deep Linking to re-open the app and send the
   Authorization Key. Right now, the verification has to be done manually through adding the link as
   trusted within the App's Settings. The automatic verification process is being worked on right now
-  and I will update the README.md as soon as it is confirmed.
+  and I will update the README.md as soon as it is confirmed.~~
 - More tests, cleanings and validation has to be done before the app is ready for the app is ready
   for Initial Production Release. If you find any issues, please create a new issue in the
   repository and it will be checked on as soon as possible.
