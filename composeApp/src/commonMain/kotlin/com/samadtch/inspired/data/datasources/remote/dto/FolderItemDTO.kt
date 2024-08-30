@@ -12,5 +12,6 @@ data class FolderItemsDTO(
 data class FolderItemDTO(
     val type: String,
     val asset: AssetDTO? = null,
+    val image: AssetDTO? = null, // same as asset
     val folder: FolderDTO? = null
 )

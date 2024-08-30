@@ -38,6 +38,7 @@ data class AssetResponse(
 @Serializable
 data class AssetDTO(
     val id: String,
+    val type: String = "image",
     val name: String,
     val tags: List<String>,
     @SerialName("created_at")

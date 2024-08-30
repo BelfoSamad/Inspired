@@ -41,6 +41,11 @@ class FoldersRepositoryImpl(
                     val asset = item.asset!!.asExternalModel()
                     assets.add(asset)
                 }
+
+                "image" -> {
+                    val asset = item.image!!.asExternalModel()
+                    assets.add(asset)
+                }
             }
         }
         return folders to assets.filter { it.tags.contains("inspiration") }
