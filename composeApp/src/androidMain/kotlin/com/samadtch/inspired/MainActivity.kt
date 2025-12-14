@@ -11,7 +11,6 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.asImageBitmap
@@ -25,7 +24,6 @@ import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.samadtch.bilinguai.BuildKonfig
 import com.samadtch.inspired.domain.models.AssetFile
 import com.samadtch.inspired.domain.utilities.PKCEUtil
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,6 +32,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okio.ByteString.Companion.encodeUtf8
 import javax.inject.Inject
+import androidx.core.net.toUri
+import com.samadtch.inspired.BuildKonfig
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -103,7 +103,7 @@ class MainActivity : FragmentActivity() {
             //------------------------------- UI
             App(
                 onSplashScreenDone = { lifecycleScope.launch { _loaded.emit(false) } },
-                openWebPage = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
+                openWebPage = { startActivity(Intent(Intent.ACTION_VIEW, it.toUri())) },
                 launchReview = {
                     reviewManager = ReviewManagerFactory.create(this)
                     val request = reviewManager.requestReviewFlow()
@@ -128,7 +128,7 @@ class MainActivity : FragmentActivity() {
 
                     //Make Call
                     CustomTabsIntent.Builder().build().launchUrl(
-                        context, Uri.parse("${BuildKonfig.AUTH_URL}?$authParams")
+                        context, "${BuildKonfig.AUTH_URL}?$authParams".toUri()
                     )
                 },
                 authorizationCode = if (receivedCode == null) null else PKCEUtil.getCodeVerifier() to receivedCode!!,

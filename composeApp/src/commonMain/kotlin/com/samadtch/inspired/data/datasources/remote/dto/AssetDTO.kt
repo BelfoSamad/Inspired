@@ -1,9 +1,10 @@
 package com.samadtch.inspired.data.datasources.remote.dto
 
 import com.samadtch.inspired.domain.models.Asset
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @Serializable
 data class AssetUploadJobDTO(
@@ -55,6 +56,7 @@ data class Thumbnail(
     val url: String
 )
 
+@OptIn(ExperimentalTime::class)
 fun AssetDTO.asExternalModel() = Asset(
     assetId = id,
     name = name,

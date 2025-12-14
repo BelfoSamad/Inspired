@@ -1,9 +1,10 @@
 package com.samadtch.inspired.data.datasources.remote.dto
 
 import com.samadtch.inspired.domain.models.Folder
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @Serializable
 data class FolderInput(
@@ -37,6 +38,7 @@ data class FolderDTO(
     val updatedAt: Int,
 )
 
+@OptIn(ExperimentalTime::class)
 fun FolderDTO.asExternalModel() = Folder(
     folderId = id,
     name = name,

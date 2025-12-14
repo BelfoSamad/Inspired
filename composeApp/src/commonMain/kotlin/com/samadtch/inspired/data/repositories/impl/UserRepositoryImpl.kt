@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.samadtch.inspired.data.repositories.impl
 
 import com.samadtch.inspired.common.exceptions.AuthException
@@ -6,7 +8,7 @@ import com.samadtch.inspired.data.datasources.local.preferences.AppPreferencesDa
 import com.samadtch.inspired.data.datasources.local.preferences.TokenPreferencesDataSource
 import com.samadtch.inspired.data.datasources.remote.AuthRemoteDataSource
 import com.samadtch.inspired.data.repositories.UserRepository
-import kotlinx.datetime.Clock
+import kotlin.time.ExperimentalTime
 
 class UserRepositoryImpl(
     private val authRemoteDataSource: AuthRemoteDataSource,
@@ -19,7 +21,7 @@ class UserRepositoryImpl(
         tokenPrefsDataSource.saveToken(
             token.accessToken,
             token.refreshToken,
-            Clock.System.now().epochSeconds.toInt() + token.expiresIn
+            kotlin.time.Clock.System.now().epochSeconds.toInt() + token.expiresIn
         )  //Update App Tokens
         appPreferencesDataSource.setLoggedIn(true) //Update App
     }
@@ -28,14 +30,14 @@ class UserRepositoryImpl(
         if (tokenPrefsDataSource.getRefreshToken() == null) throw AuthException(AUTH_TOKEN_MISSING)
 
         //Refresh Token if needed
-        if (Clock.System.now().epochSeconds < tokenPrefsDataSource.expiresAt()) {
+        if (kotlin.time.Clock.System.now().epochSeconds < tokenPrefsDataSource.expiresAt()) {
             execute(tokenPrefsDataSource.getAccessToken()!!)
         } else {
             val token = authRemoteDataSource.refreshToken(tokenPrefsDataSource.getRefreshToken()!!)
             tokenPrefsDataSource.saveToken(
                 token.accessToken,
                 token.refreshToken,
-                Clock.System.now().epochSeconds.toInt() + token.expiresIn
+                kotlin.time.Clock.System.now().epochSeconds.toInt() + token.expiresIn
             )
             execute(token.accessToken)
         }

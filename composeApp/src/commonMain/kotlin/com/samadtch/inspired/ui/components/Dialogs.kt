@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.samadtch.inspired.ui.components
 
 import androidx.compose.foundation.background
@@ -5,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -79,13 +80,13 @@ import inspired.composeapp.generated.resources.update
 import inspired.composeapp.generated.resources.update_folder
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import kotlinx.datetime.Clock
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.ExperimentalTime
 
 /* **************************************************************************
  * ************************************* Folders
@@ -278,7 +279,6 @@ fun FolderEditorDialog(
 /* **************************************************************************
  * ************************************* Assets
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AssetDialog(
     asset: Asset,
@@ -373,8 +373,6 @@ fun AssetDialog(
     )
 }
 
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AssetEditorDialog(
     assetFile: AssetFile? = null,
@@ -593,7 +591,7 @@ fun AssetEditorDialog(
                                     if (type == null) add("other") else add(type!!.lowercase())
                                 }.toList(),
                                 folderId = folderId,
-                                createdAt = Clock.System.now()
+                                createdAt = kotlin.time.Clock.System.now()
                             ),
                             assetFile
                         )

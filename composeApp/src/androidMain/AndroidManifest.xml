@@ -31,7 +31,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="inspired.samadtch.com"
+                    android:host="inspired.belfodil.me"
                     android:pathPrefix="/oauth_redirect"
                     android:scheme="https" />
             </intent-filter>

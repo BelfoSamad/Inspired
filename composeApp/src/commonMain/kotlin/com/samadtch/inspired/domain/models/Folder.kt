@@ -1,8 +1,9 @@
 package com.samadtch.inspired.domain.models
 
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-data class Folder(
+data class Folder @OptIn(ExperimentalTime::class) constructor(
     val folderId: String? = null,
     val name: String,
     val parentId: String? = null,

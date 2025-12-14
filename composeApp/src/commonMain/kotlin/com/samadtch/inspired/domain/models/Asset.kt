@@ -1,9 +1,10 @@
 package com.samadtch.inspired.domain.models
 
 import com.samadtch.inspired.data.datasources.remote.dto.Thumbnail
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
+import kotlin.time.ExperimentalTime
 
-data class Asset(
+data class Asset @OptIn(ExperimentalTime::class) constructor(
     val assetId: String? = null,
     val name: String,
     val tags: List<String>,

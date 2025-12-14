@@ -1,6 +1,6 @@
 package com.samadtch.inspired.data.datasources.remote.impl
 
-import com.samadtch.bilinguai.BuildKonfig
+import com.samadtch.inspired.BuildKonfig
 import com.samadtch.inspired.common.exceptions.handleAuthError
 import com.samadtch.inspired.data.datasources.remote.AuthRemoteDataSource
 import com.samadtch.inspired.data.datasources.remote.dto.TokenGenOutput

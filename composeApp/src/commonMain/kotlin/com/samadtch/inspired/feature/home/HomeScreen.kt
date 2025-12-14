@@ -85,6 +85,7 @@ import inspired.composeapp.generated.resources.logo_font
 import inspired.composeapp.generated.resources.slogan
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.ExperimentalTime
 
 const val HOME_ROUTE = "/home"
 
@@ -594,6 +595,7 @@ fun FolderLoader() {
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun FolderItem(
     folder: Folder,
