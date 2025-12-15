@@ -11,7 +11,6 @@ data class FolderItemsDTO(
 @Serializable
 data class FolderItemDTO(
     val type: String,
-    val asset: AssetDTO? = null,
-    val image: AssetDTO? = null, // same as asset
+    val image: AssetDTO? = null,
     val folder: FolderDTO? = null
 )

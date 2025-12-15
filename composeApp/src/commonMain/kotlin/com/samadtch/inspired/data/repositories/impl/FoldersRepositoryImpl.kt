@@ -39,11 +39,6 @@ class FoldersRepositoryImpl(
                     if (childItems != null) assets.addAll(childItems.second)
                 }
 
-                "asset" -> {
-                    val asset = item.asset!!.asExternalModel()
-                    assets.add(asset)
-                }
-
                 "image" -> {
                     val asset = item.image!!.asExternalModel()
                     assets.add(asset)

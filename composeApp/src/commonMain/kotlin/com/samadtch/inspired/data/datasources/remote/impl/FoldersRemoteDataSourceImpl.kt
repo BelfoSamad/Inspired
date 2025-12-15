@@ -26,7 +26,7 @@ class FoldersRemoteDataSourceImpl(
     override suspend fun getFolderItems(token: String, folderId: String): List<FolderItemDTO> =
         handleDataError("getFolderItems") {
             val folderItems = mutableListOf<FolderItemDTO>()
-            val items = client.get("folders/$folderId/items?item_types=asset,folder") {
+            val items = client.get("folders/$folderId/items?item_types=image,folder") {
                 bearerAuth(token)
             }.body<FolderItemsDTO>()
             folderItems.addAll(items.items)
@@ -35,7 +35,7 @@ class FoldersRemoteDataSourceImpl(
             var continuationToken = items.continuation
             while (continuationToken != null) {
                 val newItems =
-                    client.get("folders/$folderId/items?item_types=asset,folder&continuation=${continuationToken}")
+                    client.get("folders/$folderId/items?item_types=image,folder&continuation=${continuationToken}")
                     { bearerAuth(token) }.body<FolderItemsDTO>()
                 folderItems.addAll(newItems.items)
                 continuationToken = newItems.continuation

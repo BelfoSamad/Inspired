@@ -24,9 +24,3 @@ The app follows the Android's recommended Architecture (MVVM) and the packages a
 - Data Layer: DataSources (local, remote), Repositories.
 - UI Layer: ViewModels, Screens and Navigation.
 
-# To Do
-
-- [ ] Push Folder update (Create/Delete/Update) into AssetDialog
-- [ ] Move Assets
-- [ ] Move Folders (Drag/Drop)
-

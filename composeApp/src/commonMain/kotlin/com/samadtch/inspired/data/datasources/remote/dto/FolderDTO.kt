@@ -36,11 +36,13 @@ data class FolderDTO(
     val createdAt: Int,
     @SerialName("updated_at")
     val updatedAt: Int,
+    val thumbnail: Thumbnail? = null
 )
 
 @OptIn(ExperimentalTime::class)
 fun FolderDTO.asExternalModel() = Folder(
     folderId = id,
     name = name,
-    createdAt = Instant.fromEpochSeconds(createdAt.toLong())
+    createdAt = Instant.fromEpochSeconds(createdAt.toLong()),
+    thumbnail = thumbnail,
 )
